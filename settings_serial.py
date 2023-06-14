@@ -179,6 +179,8 @@ for ichem_only in range (0,nchem_only): #JGL: Loop over chemistry-only integrati
         mid_of_tchem_only = 0.5*(t0_corrected + end_of_tchem_only_corrected)
     else:
         mid_of_tchem_only = (0.5*(t0_corrected + end_of_tchem_only_corrected))-86400
+        if mid_of_tchem_only < 0:
+            mid_of_tchem_only = mid_of_tchem_only + 86400
     itvar_params = ceil(mid_of_tchem_only/3600)-1
     print('t0=',t0)
     print('end_of_tchem_only=',end_of_tchem_only) 
