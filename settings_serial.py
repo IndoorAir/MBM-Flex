@@ -34,7 +34,7 @@ from math import ceil
 # =============================================================================================== #
 
 # Basic model settings
-filename = 'mcm_v331.fac'   # Chemical mechanism file in FACSIMILE format
+filename = 'mcm_subset.fac'   # Chemical mechanism file in FACSIMILE format
 
 particles = True   # set to True if particles are included
 
