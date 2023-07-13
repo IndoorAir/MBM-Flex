@@ -680,7 +680,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     h2o,rh = h2o_rh(t0,temp,rel_humidity,numba_exp)   
     
     species,ppool,rate_numba,reactions_numba=import_all(filename) #import from MCM download
-    
+
     pi = 4.0*numba_arctan(1.0) #for photolysis and some rates
     
     # dictionary for evaluating the reaction rates
@@ -914,13 +914,14 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
                         timed_dict["%s_timed" % key] = 0
             else:
                 print('%s not found in species list (timed input)' % key)
-    
+
     '''
     importing initial concentrations
     '''
     density_dict,calc_dict = initial_conditions(initial_conditions_gas,M,species,\
                                                 rate_numba,calc_dict,particles,\
-                                                    initials_from_run,t0,path, iroom,ichem_only,custom_name) #JGL: Added iroom
+                                                initials_from_run,t0,path,iroom,\
+                                                ichem_only,custom_name)
     density_dict['RO2']=ppool_density_calc(density_dict,ppool)
     
     #calculating t0 summations

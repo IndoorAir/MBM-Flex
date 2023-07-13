@@ -103,13 +103,18 @@ def initial_conditions(initial_filename,M,species,rate_numba,calc_dict,particles
         for i in initial:
             if i[0] in species:
                 density_dict[i[0]]=eval(i[1],{},calc_dict)
-                
+            if i[0] == "RO2":
+                density_dict[i[0]]=eval(i[1],{},calc_dict)
+
         for i in species:
             if i not in density_dict and i.startswith('PART'):
                 density_dict[i]=0
             elif i not in density_dict:
                 density_dict[i]=0
-            
+
+        if 'RO2' not in density_dict:
+            density_dict['RO2'] = 0
+
     if particles == True and 'seed_1' not in density_dict:
         density_dict['seed_1']=2.09e10
         density_dict['seed']=density_dict['seed_1']*1.33e-4
