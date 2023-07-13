@@ -23,6 +23,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+
 def surface_deposition(AV,H2O2_dep,O3_dep):
     '''
     Calculations of surface deposition rates, not all species have
@@ -43,12 +44,12 @@ def surface_deposition(AV,H2O2_dep,O3_dep):
     VDACID = 0.0359
     VDKET = 0.016
     if O3_dep == False:
-    surface_dict['O3_SURF']=(0.0345)*AV
+        surface_dict['O3_SURF']=(0.0345)*AV
     surface_dict['HNO3_SURF']=(0.176)*AV
     surface_dict['SO2_SURF']=(0.029)*AV
     surface_dict['NO2_SURF']=(0.0261)*AV
     if H2O2_dep == False:
-    surface_dict['H2O2_SURF']=(0.045)*AV
+        surface_dict['H2O2_SURF']=(0.045)*AV
     surface_dict['CH3OH_SURF']=(0.0307)*AV
     surface_dict['C2H5OH_SURF']=(0.0264)*AV
     surface_dict['HCHO_SURF']=(0.035)*AV
