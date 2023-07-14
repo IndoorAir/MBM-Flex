@@ -57,11 +57,11 @@ lat = 45.4   # Latitude of simulation location
 # =============================================================================================== #
 # Integration settings and time control
 
-dt = 150     # Time between outputs (s), simulation may fail if this is too large
+dt = 120     # Time between outputs (s), simulation may fail if this is too large
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-total_seconds_to_integrate = 4800   # how long to run the model in seconds (86400*3 will run 3 days)
+total_seconds_to_integrate = 600   # how long to run the model in seconds (86400*3 will run 3 days)
 
 end_of_total_integration = t0+total_seconds_to_integrate
 
@@ -394,7 +394,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         # An output pickle file is automatically saved so that all data can be recovered
         # at a later date for analysis. Applies to folder name and settings file copy name.
-        custom_name = 'Test_20230629_Serial'
+        custom_name = 'Test_20230714_Serial'
 
         # INCHEM-Py calculates the rate constant for each reaction at every time point
         # Setting reactions_output to True saves all reactions and their assigned constant
