@@ -34,11 +34,11 @@ from math import ceil
 # =============================================================================================== #
 
 # Basic model settings
-filename = 'mcm_subset.fac'   # Chemical mechanism file in FACSIMILE format
+filename = 'rcs_2023.fac'   # Chemical mechanism file in FACSIMILE format
 
-particles = True   # set to True if particles are included
+particles = False   # set to True if particles are included
 
-INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
+INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
 
 custom = False   # Custom reactions that are not in the MCM or in the INCHEM mechanism
                  # The format of this file is described in `custom_input.txt`
@@ -54,6 +54,8 @@ date = "21-06-2020"   # Day of simulation in format "DD-MM-YYYY"
 
 lat = 45.4   # Latitude of simulation location
 
+pressure_Pa = 101537
+
 # =============================================================================================== #
 # Integration settings and time control
 
@@ -61,7 +63,7 @@ dt = 120     # Time between outputs (s), simulation may fail if this is too larg
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-total_seconds_to_integrate = 600   # how long to run the model in seconds (86400*3 will run 3 days)
+total_seconds_to_integrate = 3600   # how long to run the model in seconds (86400*3 will run 3 days)
 
 end_of_total_integration = t0+total_seconds_to_integrate
 
@@ -118,7 +120,6 @@ mrglass = tcon_params['percent_glass'].tolist()
 # Room parameters that change with time and emissions of chemical species
 all_mrtemp = []
 all_mrrh = []
-all_mrpres = []
 all_mracrate = []
 all_mrlswitch = []
 
@@ -133,7 +134,6 @@ for iroom in range(0,nroom):
     # Physical parameters of each room variable with time: `mr_tvar_room_params_*.csv`
     # - temperature (K)
     # - relative humidity (%)
-    # - pressure (Pa)
     # - outdoor/indoor change rate (s^-1)
     # - light switch (on/off)
     tvar_params = read_csv("config/mr_tvar_room_params_"+str(iroom+1)+".csv")
@@ -141,7 +141,6 @@ for iroom in range(0,nroom):
     secsfrommn = tvar_params['seconds_from_midnight'].tolist()
     mrtemp = tvar_params['temp_in_kelvin'].tolist()
     mrrh = tvar_params['rh_in_percent'].tolist()
-    mrpres = tvar_params['pressure_in_pascal'].tolist()
     mracrate = tvar_params['airchange_in_per_second'].tolist()
     mrlswitch = tvar_params['light_switch'].tolist()
     #print('mracrate=',mracrate)
@@ -154,7 +153,6 @@ for iroom in range(0,nroom):
 
     all_mrtemp.append(mrtemplist)
     all_mrrh.append(mrrh)
-    all_mrpres.append(mrpres)
     all_mracrate.append(mracrlist)
     all_mrlswitch.append(mrlswitch)
     #print('all_mracrate=',all_mracrate)
@@ -256,9 +254,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         rel_humidity = all_mrrh[iroom][itvar_params] # relative humidity (%)
         #print('rel_humidity=',rel_humidity)
 
-        mrp = all_mrpres[iroom][itvar_params]
         mrt = all_mrtemp[iroom][itvar_params][1]
-        M = (mrp/(8.3144626*mrt))*(6.0221408e23/1e6) # number density of air (molecule cm^-3)
+        M = (pressure_Pa/(8.3144626*mrt))*(6.0221408e23/1e6) # number density of air (molecule cm^-3)
         #print('M=',M)
 
         # Place any species you wish to remain constant in the below dictionary. Follow the format.
@@ -407,7 +404,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # output folder of a list of selected species and a CSV of concentrations.
         # If the species do not exist in the run then a key error will cause it to fail
         output_graph = True
-        output_species = ['O3','O3OUT','LIMONENE','APINENE']
+        output_species = ['O3','O3OUT']
 
         '''
         Set the output folder in the current working directory
