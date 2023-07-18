@@ -20,7 +20,7 @@ def calc_transport(custom_name,ichem_only,tchem_only,nroom,mrvol):
 
     #print(output_data_before_transport[1])
 
-    trans_params_csv = open("mr_tcon_transport_params.csv") #JGL: Comprises an array of AERs between rooms (m3/s)
+    trans_params_csv = open("config/mr_tcon_transport_params.csv") #JGL: Comprises an array of AERs between rooms (m3/s)
     trans_params = np.genfromtxt(trans_params_csv, delimiter=",")
     #print(trans_params)
 
