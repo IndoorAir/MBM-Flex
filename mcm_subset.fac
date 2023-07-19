@@ -1,57 +1,20 @@
-******************************************************************
-*       
-*       Citation
-*       
-*       A citation to
-*  the MCM website and the relevant mechanism construction
-*  protocols should be given in any publication using
-*  information obtained from this source, using the following
-*  or comparable wording:
-*       
-* The chemical mechanistic
-*  information was taken from the Master Chemical Mechanism,
-*  MCM v3.3.1 (reference), via  website:
-*  http://mcm.york.ac.uk/
-* 
-* The reference should be: 
-* 
-*
-*  For non-aromatic schemes:
-*    
-*       Jenkin et al.,
-*  Atmos. Environ., 31, 81, 1997
-*  [doi:10.1016/S1352-2310(96)00105-7]
-*       Saunders et
-*  al., Atmos. Chem. Phys., 3, 161, 2003
-*  [doi:10.5194/acp-3-161-2003]
-*    
-*    For aromatic
-*  schemes:
-*    
-*       Jenkin et al., Atmos. Chem. Phys.,
-*  3, 181, 2003 [doi:10.5194/acp-3-181-2003]
-*       Bloss et
-*  al., Atmos. Chem. Phys., 5, 641, 2005
-*  [doi:10.5194/acp-5-641-2005]
-*    
-*    For the
-*  β-caryophyllene scheme:
-*    
-*       Jenkin et al.,
-*  Atmos. Chem. Phys.,  12, 5275, 2012
-*  [doi:10.5194/acp-12-5275-2012]
-*    
-*    For the isoprene
-*  scheme:
-*    
-*       Jenkin et al., Atmos. Chem. Phys.,
-*  15, 11433-11459, 2015 [doi:10.5194/acp-15-11433-2015]
-*
-*  * 
-* 
-*     
-*
-******************************************************************
+********************************************************************* ;
+* A citation to the MCM website and the relevant mechanism          * ;
+* construction protocols should be given in any publication using   * ;
+* information obtained from this source, using the following or     * ;
+* comparable wording:                                               * ;
+* The chemical mechanistic information was taken from the Master    * ;
+* Chemical Mechanism, MCM v3.3.1 (ref), via website:                  * ;
+* http://mcm.leeds.ac.uk/MCM.                                       * ;
+* The reference should be: (Jenkin et al., Atmos. Environ., 31, 81, * ;
+* 1997; Saunders et al., Atmos. Chem. Phys., 3, 161, 2003), for     * ;
+* non aromatic schemes; (Jenkin et al., Atmos. Chem. Phys., 3,  * ;
+* 181, 2003; Bloss et al., Atmos. Chem. Phys., 5, 641, 2005), for   * ;
+* aromatic schemes; (Jenkin et al., Atmos. Chem. Phys.,  12, * ;
+* 5275, 2012), for the beta-caryophyllene scheme and (Jenkin et al., ;
+* Atmos. Chem. Phys., 15, 11433, 2015), for the isoprene scheme.  * ;
+********************************************************************* ;
+* MCMv3.3.1 Subset generated for the following species:   ;
 * CH3OH C2H5OH HCHO CH3CHO CH4 C2H4 C3H6 CH3COCH3 HCOOH CH3CO2H C5H8 ;
 * C2H6 C3H8 NC6H14 NC11H24 BENZENE TOLUENE OXYL MXYL PXYL EBENZ ;
 * TM124B TM135B STYRENE TCE TRICLETH C4H6 APINENE LIMONENE ;
@@ -543,20 +506,10 @@ FCPPN = 0.36 ;
 NCPPN = 0.75-1.27*(LOG10(FCPPN)) ;
 FPPN = 10@(LOG10(FCPPN)/(1+(LOG10(KRPPN)/NCPPN)**2)) ;
 KBPPN = (KPPN0*KPPNI)*FCPPN/(KPPN0+KPPNI) ;
-KNO = KRO2NO*NO ;
-KHO2 = KRO2HO2*HO2*0.706 ;
-KRO2 = 1.26D-12*RO2 ;
-KNO3 = KRO2NO3*NO3 ;
-KTR = KNO + KHO2 + KRO2 + KNO3 ;
-K16ISOM = (KTR*5.18D-04*EXP(1308/TEMP)) +(2.76D+07*EXP(-6759/TEMP)) ;
-****************************************************** ;
 *;
+* ****************************************************************** ;
 * Peroxy radicals. ;
 *;
-* WARNING: The following species do not have SMILES strings in the database. ;
-*          If any of these are peroxy radicals the RO2 sum will be wrong!!! ;
-****************************************************** ;
-*  ;
 RO2 = HOCH2CH2O2 + CH3O2 + CH3CO3 + HCOCH2O2 + ETHENO3O2 + PRONO3AO2 +
       PRONO3BO2 + HYPROPO2 + IPROPOLO2 + CH3COCH2O2 + NISOPO2 +
       ISOP34O2 + C2H5O2 + IC3H7O2 + NC3H7O2 + HEXAO2 + HEXBO2 + HEXCO2
@@ -650,6 +603,7 @@ RO2 = HOCH2CH2O2 + CH3O2 + CH3CO3 + HCOCH2O2 + ETHENO3O2 + PRONO3AO2 +
       C4OHCO3 + NC61CO3 + C519CO3 + C629O2 + C734O2 + C5OH2CO4O2 +
       C516O2 + C44O2 + H1C23C4CO3 + H1C23C4O2 + C519O2 + C625O2 ;
 *;
+* ****************************************************************** ;
 * Reaction definitions. ;
 *;
 % 5.6D-34*N2*(TEMP/300)@-2.6*O2 : O = O3 ;
@@ -8432,6 +8386,3 @@ RO2 = HOCH2CH2O2 + CH3O2 + CH3CO3 + HCOCH2O2 + ETHENO3O2 + PRONO3AO2 +
 % J<22> : C625OH = HOC2H4CO3 + ACETOL + HO2 ;
 *;
 * End of Subset.  No. of Species = 2575, No. of Reactions = 7778 ;
-*;
-% 9.66D-5 : NO2 = HONO ;
-*;
