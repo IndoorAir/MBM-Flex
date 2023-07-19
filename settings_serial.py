@@ -42,9 +42,9 @@ import shutil
 #filename = 'mcm_subset.fac'   # Subset of the MCM: 2575 species, 7778 reactions
 filename = 'rcs_2023.fac'      # RCS mechanism: 51 species, 137 reactions
 
-particles = False   # set to True if particles are included
+particles = True   # set to True if particles are included
 
-INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
+INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
 
 custom = False   # Custom reactions that are not in the MCM or in the INCHEM mechanism
                  # The format of this file is described in `custom_input.txt`
@@ -60,7 +60,7 @@ date = "21-06-2020"   # Day of simulation in format "DD-MM-YYYY"
 
 lat = 45.4   # Latitude of simulation location
 
-pressure_Pa = 101537
+pressure_Pa = 101325   # assume pressure is constant and 
 
 # =============================================================================================== #
 # Integration settings and time control
@@ -69,7 +69,7 @@ dt = 120     # Time between outputs (s), simulation may fail if this is too larg
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-total_seconds_to_integrate = 1200   # how long to run the model in seconds (86400*3 will run 3 days)
+total_seconds_to_integrate = 3600   # how long to run the model in seconds (86400*3 will run 3 days)
 
 end_of_total_integration = t0+total_seconds_to_integrate
 
