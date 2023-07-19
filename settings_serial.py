@@ -31,10 +31,16 @@ import datetime
 from pandas import read_csv
 from math import ceil
 
+import shutil
+
 # =============================================================================================== #
 
 # Basic model settings
-filename = 'rcs_2023.fac'   # Chemical mechanism file in FACSIMILE format
+
+# Chemical mechanism file in FACSIMILE format
+#filename = 'mcm_v331.fac'     # Full MCM: 5833 species, 17224 reactions
+#filename = 'mcm_subset.fac'   # Subset of the MCM: 2575 species, 7778 reactions
+filename = 'rcs_2023.fac'      # RCS mechanism: 51 species, 137 reactions
 
 particles = False   # set to True if particles are included
 
@@ -63,7 +69,7 @@ dt = 120     # Time between outputs (s), simulation may fail if this is too larg
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-total_seconds_to_integrate = 3600   # how long to run the model in seconds (86400*3 will run 3 days)
+total_seconds_to_integrate = 1200   # how long to run the model in seconds (86400*3 will run 3 days)
 
 end_of_total_integration = t0+total_seconds_to_integrate
 
@@ -403,7 +409,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # This function purely outputs a graph to the
         # output folder of a list of selected species and a CSV of concentrations.
         # If the species do not exist in the run then a key error will cause it to fail
-        output_graph = True
+        output_graph = False
         output_species = ['O3','O3OUT']
 
         '''
@@ -413,6 +419,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         now = datetime.datetime.now()
         # folder name: includes chemistry-only integration number and room number
         output_folder = ("%s_%s_%s" % (custom_name,'c'+str(ichem_only),'r'+str(iroom+1)))
+        shutil.rmtree('%s/%s' % (path,output_folder)) # TODO : remember to comment for production runs!
         os.mkdir('%s/%s' % (path,output_folder))
         with open('%s/__init__.py' % output_folder,'w') as f:
             pass
