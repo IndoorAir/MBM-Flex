@@ -39,10 +39,12 @@ import shutil
 
 # Chemical mechanism file in FACSIMILE format
 #filename = 'mcm_v331.fac'     # Full MCM: 5833 species, 17224 reactions
-#filename = 'mcm_subset.fac'   # Subset of the MCM: 2575 species, 7778 reactions
-filename = 'rcs_2023.fac'      # RCS mechanism: 51 species, 137 reactions
+filename = 'mcm_subset.fac'   # Subset of the MCM: 2575 species, 7778 reactions
+#filename = 'rcs_2023.fac'      # RCS mechanism: 51 species, 137 reactions
 
 particles = True   # set to True if particles are included
+                   # NB: if set to `True`, the chemical mechanism MUST include at least
+                   # one BVOC (limonene, a-pinene, b-pinene) otherwise the model will crash
 
 INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
 
@@ -82,12 +84,12 @@ nchem_only = round(total_seconds_to_integrate/tchem_only)
 if nchem_only == 0:
     nchem_only = 1
 
-# print('total_seconds_to_integrate set to',total_seconds_to_integrate)
-# print('tchem_only set to',tchem_only)
-# print('nchem_only therefore set to',nchem_only)
+#print('total_seconds_to_integrate set to',total_seconds_to_integrate)
+#print('tchem_only set to',tchem_only)
+#print('nchem_only therefore set to',nchem_only)
 
 seconds_to_integrate = tchem_only
-# print('seconds_to_integrate set to',seconds_to_integrate)
+#print('seconds_to_integrate set to',seconds_to_integrate)
 
 # =============================================================================================== #
 
@@ -234,10 +236,10 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         if mid_of_tchem_only < 0:
             mid_of_tchem_only = mid_of_tchem_only + 86400
     itvar_params = ceil(mid_of_tchem_only/3600)-1
-    # print('t0=',t0)
-    # print('end_of_tchem_only=',end_of_tchem_only)
-    # print('mid_of_tchem_only=',mid_of_tchem_only)
-    # print('itvar_params=',itvar_params)
+    #print('t0=',t0)
+    #print('end_of_tchem_only=',end_of_tchem_only)
+    #print('mid_of_tchem_only=',mid_of_tchem_only)
+    #print('itvar_params=',itvar_params)
 
     # ----------------------------------------------------------------------------- #
     # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py in each room
