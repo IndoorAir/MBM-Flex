@@ -31,38 +31,35 @@ import datetime
 from pandas import read_csv
 from math import ceil
 
-import shutil
-
 # =============================================================================================== #
-
 # Basic model settings
 
-# Chemical mechanism file in FACSIMILE format
-#filename = 'mcm_v331.fac'     # Full MCM: 5833 species, 17224 reactions
-filename = 'mcm_subset.fac'   # Subset of the MCM: 2575 species, 7778 reactions
-#filename = 'rcs_2023.fac'      # RCS mechanism: 51 species, 137 reactions
+# Choose the chemical mechanism
+# full : the complete MCM (5833 species, 17224 reactions)
+# subset : a subset of the MCM (2575 species, 7778 reactions)
+# reduced : the RCS mechanism (51 species, 137 reactions)
+mechanism = 'reduced'
 
-particles = True   # set to True if particles are included
-                   # NB: if set to `True`, the chemical mechanism MUST include at least
-                   # one BVOC (limonene, a-pinene, b-pinene) otherwise the model will crash
+particles = False   # set to True if particles are included 
+                    # NB: cannot be used with the 'reduced' mechanism
 
-INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
+INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
 
 custom = False   # Custom reactions that are not in the MCM or in the INCHEM mechanism
                  # The format of this file is described in `custom_input.txt`
 
 diurnal = True   # Diurnal outdoor concentrations. Boolean
 
-city = "Bergen_urban"   # Source city of outdoor concentrations of O3, NO, NO2, and PM2.5
-                        # Options are "London_urban", "London_suburban" or "Bergen_urban"
+city = 'Bergen_urban'   # Source city of outdoor concentrations of O3, NO, NO2, and PM2.5
+                        # Options are 'London_urban', 'London_suburban' or 'Bergen_urban'
                         # Changes to outdoor concentrations can be done in outdoor_concentrations.py
                         # See the INCHEM-Py manual for details of sources and fits
 
-date = "21-06-2020"   # Day of simulation in format "DD-MM-YYYY"
+date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 
 lat = 45.4   # Latitude of simulation location
 
-pressure_Pa = 101325   # assume pressure is constant and 
+pressure_Pa = 101325   # atmospheric pressure is constant and is the same in all rooms
 
 # =============================================================================================== #
 # Integration settings and time control
@@ -71,14 +68,16 @@ dt = 120     # Time between outputs (s), simulation may fail if this is too larg
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-total_seconds_to_integrate = 3600   # how long to run the model in seconds (86400*3 will run 3 days)
+# Set how long to run the model in seconds (86400 seconds is 1 day)
+total_seconds_to_integrate = 600     # NB: must be > tchem_only
+end_of_total_integration = t0 + total_seconds_to_integrate
 
-end_of_total_integration = t0+total_seconds_to_integrate
+# Set length of chemistry-only integrations between simple treatments of
+# transport (assumed separable)
+tchem_only = 600     # NB: must be < 3600 seconds
 
-# Set length of chemistry-only integrations between simple treatments of transport (assumed separable)
-tchem_only = 600     # MUST BE < 3600 SECONDS
-
-# Calculate nearest whole number of chemistry-only integrations, approximating seconds_to_integrate
+# Calculate nearest whole number of chemistry-only integrations,
+# approximating seconds_to_integrate
 nchem_only = round(total_seconds_to_integrate/tchem_only)
 
 if nchem_only == 0:
@@ -89,9 +88,54 @@ if nchem_only == 0:
 #print('nchem_only therefore set to',nchem_only)
 
 seconds_to_integrate = tchem_only
-#print('seconds_to_integrate set to',seconds_to_integrate)
+print('Seconds_to_integrate set to:',seconds_to_integrate)
 
 # =============================================================================================== #
+# Output settings
+
+# An output pickle file is automatically saved so that all data can be recovered
+# at a later date for analysis. Applies to folder name and settings file copy name.
+custom_name = 'Test_Serial'
+
+# INCHEM-Py calculates the rate constant for each reaction at every time point
+# Setting reactions_output to True saves all reactions and their assigned constant
+# to reactions.pickle and adds all calculated reaction rates to the out_data.pickle
+# file which will increase its size substantially. Surface deposition rates are also
+# added to the out_data.pickle file for analysis.
+reactions_output = True
+
+# This function purely outputs a graph to the
+# output folder of a list of selected species and a CSV of concentrations.
+# If the species do not exist in the run then a key error will cause it to fail
+output_graph = False
+output_species = ['O3','O3OUT']
+
+# Setting the main output folder in the current working directory
+path=os.getcwd()
+now = datetime.datetime.now()
+output_main_dir = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"), custom_name))
+os.mkdir('%s/%s' % (path,output_main_dir))
+
+# =============================================================================================== #
+#                           DO NOT MODIFY BELOW
+# 
+# The other settings of the MBM-Flex model are set in the following files:
+#
+# 1. additional chemical reactions: `custom_input.txt` (if custom=True)
+# 2. initial concentrations of gas-phase species: `initial_concentrations.txt`
+# 3. parameters and variables of each room: `*.csv` files in `room_config/` directory
+# =============================================================================================== #
+
+if mechanism == 'full':
+    filename = 'chem_mech/mcm_v331.fac'
+elif mechanism == 'subset':
+    filename = 'chem_mech/mcm_subset.fac'
+elif mechanism == 'reduced':
+    filename = 'chem_mech/rcs_2023.fac'
+    particles = False # ensure particles are not active with the 'reduced' mechanism
+print('Chemical mechanism set to:',filename)
+
+config_dir = 'config_rooms/'
 
 # INPUT DATA: physical characteristics of the rooms
 #
@@ -102,7 +146,7 @@ seconds_to_integrate = tchem_only
 # - type of light in each room
 # - type of glass (windows) in each room
 # - types of surface in each room (as percent coverage)
-tcon_params = read_csv("config/mr_tcon_room_params.csv")
+tcon_params = read_csv(config_dir+'mr_tcon_room_params.csv')
 
 nroom = len(tcon_params['room_number']) # number of rooms (each room treated as one box)
 
@@ -121,7 +165,7 @@ mrlino = tcon_params['percent_lino'].tolist()
 mrplastic = tcon_params['percent_plastic'].tolist()
 mrglass = tcon_params['percent_glass'].tolist()
 
-# =============================================================================================== #
+# --------------------------------------------------------------------------- #
 
 # INPUT DATA: physical and chemical variables of the rooms
 #
@@ -144,7 +188,7 @@ for iroom in range(0,nroom):
     # - relative humidity (%)
     # - outdoor/indoor change rate (s^-1)
     # - light switch (on/off)
-    tvar_params = read_csv("config/mr_tvar_room_params_"+str(iroom+1)+".csv")
+    tvar_params = read_csv(config_dir+'mr_tvar_room_params_'+str(iroom+1)+'.csv')
 
     secsfrommn = tvar_params['seconds_from_midnight'].tolist()
     mrtemp = tvar_params['temp_in_kelvin'].tolist()
@@ -168,7 +212,7 @@ for iroom in range(0,nroom):
     # People in each room variable with time: `mr_tvar_expos_params_*.csv`
     # - number of adults
     # - number of children (10 years old)
-    tvar_params = read_csv("config/mr_tvar_expos_params_"+str(iroom+1)+".csv")
+    tvar_params = read_csv(config_dir+'mr_tvar_expos_params_'+str(iroom+1)+'.csv')
 
     secsfrommn = tvar_params['seconds_from_midnight'].tolist()
     mradults = tvar_params['n_adults'].tolist()
@@ -183,7 +227,7 @@ for iroom in range(0,nroom):
     # NB: when using timed emissions it's suggested that the start time and end times are
     # divisible by dt and that (start time - end time) is larger then 2*dt to avoid the
     # integrator skipping any emissions over small periods of time.
-    mremis_params = read_csv("config/mr_room_emis_params_"+str(iroom+1)+".csv")
+    mremis_params = read_csv(config_dir+'mr_room_emis_params_'+str(iroom+1)+'.csv')
 
     mremis_species = mremis_params['species'].tolist()
 
@@ -206,7 +250,7 @@ for iroom in range(0,nroom):
     else:
         all_timemis.append(True)
 
-# =============================================================================================== #
+# --------------------------------------------------------------------------- #
 
 # PRIMARY LOOP: run for the duration of tchem_only, then execute the
 # transport module (`mr_transport.py`) and reinitialize the model,
@@ -241,9 +285,9 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
     #print('mid_of_tchem_only=',mid_of_tchem_only)
     #print('itvar_params=',itvar_params)
 
-    # ----------------------------------------------------------------------------- #
-    # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py in each room
-    # and save the output of the run in a separate directory
+    # --------------------------------------------------------------------------- #
+    # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py
+    # in each room and save the output of the run in a separate directory
     for iroom in range (0,nroom): # loop over rooms
         #print('iroom=',iroom)
 
@@ -300,19 +344,19 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                 lotstr=lotstr+str(ihour)+'],'
             if (ihour==23 and all_mrlswitch[iroom][ihour]==1):
                 lotstr=lotstr+str(ihour+1)+'],'
-        lotstr=lotstr.strip(",")
+        lotstr=lotstr.strip(',')
         lotstr=lotstr+']'
         if end_of_total_integration>86400:
             lotstr=lotstr.strip("[]")
             nrep=ceil(end_of_total_integration/86400)
             lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'
         #print('lotstr=',lotstr)
-        if lotstr=="[]":
-            light_type="off"
+        if lotstr == '[]':
+            light_type = 'off'
         #print('light_type=',light_type)
-        if light_type!="off":
-            light_on_times=eval(lotstr)
-            #print('light_on_times=',light_on_times)
+        if light_type != 'off':
+            light_on_times = eval(lotstr)
+        #print('light_on_times=',light_on_times)
 
         """
         Surface deposition
@@ -397,49 +441,37 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         Output
         """
-        # An output pickle file is automatically saved so that all data can be recovered
-        # at a later date for analysis. Applies to folder name and settings file copy name.
-        custom_name = 'Test_20230714_Serial'
+        # output_folder is located inside output_main_dir and includes the room number (iroom)
+        # and the chemistry-only integration step (ichem_only)
+        output_folder = ("%s_%s" % ('room{:02d}'.format(iroom+1),'C{:02d}'.format(ichem_only)))
+        os.mkdir('%s/%s' % (output_main_dir,output_folder))
+        with open('%s/%s/__init__.py' % (output_main_dir,output_folder),'w') as f:
+             pass # file created but left empty
+        print('Creating output folder:',output_folder,'in:',output_main_dir)
 
-        # INCHEM-Py calculates the rate constant for each reaction at every time point
-        # Setting reactions_output to True saves all reactions and their assigned constant
-        # to reactions.pickle and adds all calculated reaction rates to the out_data.pickle
-        # file which will increase its size substantially. Surface deposition rates are also
-        # added to the out_data.pickle file for analysis.
-        reactions_output = True
-
-        # This function purely outputs a graph to the
-        # output folder of a list of selected species and a CSV of concentrations.
-        # If the species do not exist in the run then a key error will cause it to fail
-        output_graph = False
-        output_species = ['O3','O3OUT']
-
-        '''
-        Set the output folder in the current working directory
-        '''
-        path=os.getcwd()
-        now = datetime.datetime.now()
-        # folder name: includes chemistry-only integration number and room number
-        output_folder = ("%s_%s_%s" % (custom_name,'c'+str(ichem_only),'r'+str(iroom+1)))
-        shutil.rmtree('%s/%s' % (path,output_folder)) # TODO : remember to comment for production runs!
-        os.mkdir('%s/%s' % (path,output_folder))
-        with open('%s/__init__.py' % output_folder,'w') as f:
-            pass
-        print('Creating folder:', output_folder)
-
-        # ------------------------------------------------------------------- #
+        # --------------------------------------------------------------------------- #
 
         """
         Run the simulation
         """
 
-        if __name__ == "__main__":
-            from modules.inchem_main import run_inchem
-            run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-                       M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-                       light_on_times, glass, AV, initials_from_run,
-                       initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-                       iroom, ichem_only, path, output_folder,
-                       seconds_to_integrate, custom_name, output_graph, output_species,
-                       reactions_output, H2O2_dep, O3_dep, adults, children,
-                       surfaces_AV, __file__, temperatures, spline)
+        print("----------------------------")
+        print(filename, particles, INCHEM_additional, custom, rel_humidity)
+        print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
+        print(light_on_times, glass, AV, initials_from_run)
+        print(initial_conditions_gas, timed_emissions, timed_inputs, dt, t0)
+        print(iroom, ichem_only, path, output_folder)
+        print(seconds_to_integrate, custom_name, output_graph, output_species)
+        print(reactions_output, H2O2_dep, O3_dep, adults, children)
+        print(surfaces_AV, __file__, temperatures, spline)
+
+        # if __name__ == "__main__":
+        #     from modules.inchem_main import run_inchem
+        #     run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
+        #                M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+        #                light_on_times, glass, AV, initials_from_run,
+        #                initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+        #                iroom, ichem_only, path, output_folder,
+        #                seconds_to_integrate, custom_name, output_graph, output_species,
+        #                reactions_output, H2O2_dep, O3_dep, adults, children,
+        #                surfaces_AV, __file__, temperatures, spline)

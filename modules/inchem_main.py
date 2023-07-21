@@ -614,22 +614,6 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         
     start_time=timing.time() #program start time
 
-    #JGL: Moved assignment of path and output_folder to settings.py and passed these to inchem_main.py    
-    #'''
-    #setting the output folder in current working directory
-    #'''
- 
-    #path=os.getcwd()
-    #if ichem_only==0:  #JGL: Only create new output folder on first call to inchem_main.py for each room
-    
-        #now = datetime.datetime.now()
-        #output_folder = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"), custom_name))
-        #os.mkdir('%s/%s' % (path,output_folder))
-        #with open('%s/__init__.py' % output_folder,'w') as f:
-        #    pass
-    
-        #print('Creating folder:', output_folder)
-
     
     '''
     Saving a copy of the settings and MCM files to the output folder
