@@ -40,8 +40,9 @@ from math import ceil
 # reduced : the RCS mechanism (51 species, 137 reactions)
 mechanism = 'reduced'
 
-particles = False   # set to True if particles are included 
-                    # NB: cannot be used with the 'reduced' mechanism
+particles = False   # set to True if particles are included
+                    # NB: the chemical mechanism must include at least one of
+                    # a-pinene, b-pinene, limonene
 
 INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
 
@@ -69,7 +70,7 @@ dt = 120     # Time between outputs (s), simulation may fail if this is too larg
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
 # Set how long to run the model in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 600     # NB: must be > tchem_only
+total_seconds_to_integrate = 3600     # NB: must be > tchem_only
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Set length of chemistry-only integrations between simple treatments of
@@ -117,10 +118,9 @@ output_main_dir = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"), custom_name))
 os.mkdir('%s/%s' % (path,output_main_dir))
 
 # =============================================================================================== #
-#                           DO NOT MODIFY BELOW
-# 
-# The other settings of the MBM-Flex model are set in the following files:
+#                           DO NOT CHANGE THE CODE BELOW
 #
+# The remaining settings of MBM-Flex are set in the following files (see the Manual for details):
 # 1. additional chemical reactions: `custom_input.txt` (if custom=True)
 # 2. initial concentrations of gas-phase species: `initial_concentrations.txt`
 # 3. parameters and variables of each room: `*.csv` files in `room_config/` directory
@@ -262,7 +262,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #(1) Add simple treatment of transport between rooms here
         if (__name__ == "__main__") and (nroom >= 2):
             from modules.mr_transport import calc_transport
-            calc_transport(custom_name,ichem_only,tchem_only,nroom,mrvol)
+            calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol)
 
         #(2) Update t0; adjust time of day to start simulation (seconds from midnight),
         #    reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
@@ -441,13 +441,15 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         Output
         """
-        # output_folder is located inside output_main_dir and includes the room number (iroom)
+        # Each output_sub_dir is located inside output_main_dir and includes the room number (iroom)
         # and the chemistry-only integration step (ichem_only)
-        output_folder = ("%s_%s" % ('room{:02d}'.format(iroom+1),'C{:02d}'.format(ichem_only)))
-        os.mkdir('%s/%s' % (output_main_dir,output_folder))
-        with open('%s/%s/__init__.py' % (output_main_dir,output_folder),'w') as f:
+        output_sub_dir = ('%s_%s' % ('room{:02d}'.format(iroom+1),'c{:02d}'.format(ichem_only)))
+        output_folder = ('%s/%s' % (output_main_dir,output_sub_dir))
+        os.mkdir('%s/%s' % (path,output_folder))
+        with open('%s/__init__.py' % output_folder,'w') as f:
              pass # file created but left empty
-        print('Creating output folder:',output_folder,'in:',output_main_dir)
+
+        print('Creating output folder:',output_folder)
 
         # --------------------------------------------------------------------------- #
 
@@ -455,23 +457,23 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         Run the simulation
         """
 
-        print("----------------------------")
-        print(filename, particles, INCHEM_additional, custom, rel_humidity)
-        print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
-        print(light_on_times, glass, AV, initials_from_run)
-        print(initial_conditions_gas, timed_emissions, timed_inputs, dt, t0)
-        print(iroom, ichem_only, path, output_folder)
-        print(seconds_to_integrate, custom_name, output_graph, output_species)
-        print(reactions_output, H2O2_dep, O3_dep, adults, children)
-        print(surfaces_AV, __file__, temperatures, spline)
+        # print("----------------------------")
+        # print(filename, particles, INCHEM_additional, custom, rel_humidity)
+        # print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
+        # print(light_on_times, glass, AV, initials_from_run)
+        # print(initial_conditions_gas, timed_emissions, timed_inputs, dt, t0)
+        # print(iroom, ichem_only, path, output_folder)
+        # print(seconds_to_integrate, custom_name, output_graph, output_species)
+        # print(reactions_output, H2O2_dep, O3_dep, adults, children)
+        # print(surfaces_AV, __file__, temperatures, spline)
 
-        # if __name__ == "__main__":
-        #     from modules.inchem_main import run_inchem
-        #     run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-        #                M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-        #                light_on_times, glass, AV, initials_from_run,
-        #                initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-        #                iroom, ichem_only, path, output_folder,
-        #                seconds_to_integrate, custom_name, output_graph, output_species,
-        #                reactions_output, H2O2_dep, O3_dep, adults, children,
-        #                surfaces_AV, __file__, temperatures, spline)
+        if __name__ == "__main__":
+            from modules.inchem_main import run_inchem
+            run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
+                       M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+                       light_on_times, glass, AV, initials_from_run,
+                       initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+                       iroom, ichem_only, path, output_folder,
+                       seconds_to_integrate, custom_name, output_graph, output_species,
+                       reactions_output, H2O2_dep, O3_dep, adults, children,
+                       surfaces_AV, __file__, temperatures, spline)

@@ -618,13 +618,13 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     '''
     Saving a copy of the settings and MCM files to the output folder
     '''
-    
-    if ichem_only==0:  #JGL: Only save these files to output folder on first call to inchem_main.py for each room
-    
+
+    # Save the chemical mechanism and the settings files to the main output folder
+    # on the first call to inchem_main.py for each room
+    if ichem_only==0:
         from shutil import copyfile
-        copyfile(settings_file, "%s/%s/%s_settings.py" % (path,output_folder,custom_name))
-        copyfile(filename, "%s/%s/mcm.fac" % (path,output_folder))
-    
+        copyfile(settings_file, "%s/%s/%s_settings.py" % (path,output_folder[:-10],custom_name))
+        copyfile(filename, "%s/%s/%s_mechanism.fac" % (path,output_folder[:-10],custom_name))
     
     t_bound = t0+seconds_to_integrate #Maximum time to integrate to
     iters = 0 #the number of iterations that have been performed already (leave as 0)
@@ -904,8 +904,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     '''
     density_dict,calc_dict = initial_conditions(initial_conditions_gas,M,species,\
                                                 rate_numba,calc_dict,particles,\
-                                                initials_from_run,t0,path,iroom,\
-                                                ichem_only,custom_name)
+                                                initials_from_run,t0,path,\
+                                                output_folder,iroom,ichem_only)
     density_dict['RO2']=ppool_density_calc(density_dict,ppool)
     
     #calculating t0 summations
@@ -964,8 +964,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     
     if ichem_only>0:  #JGL: For all but first call to inchem_main.py for each room, load saved master_array_dict
     
-        with open('%s/%s/master_array.pickle' % (path,custom_name+'_c0_r'+str(iroom+1)), 'rb') as handle: master_array_dict = pickle.load(handle) #JGL: DOES MASTER ARRAY NEED UPDATING WITH CHANGING TEMP ETC?
-        
+        with open('%s/%s/master_array.pickle' % (path,output_folder[:-2]+'00'), 'rb') as handle:
+            master_array_dict = pickle.load(handle) #JGL: does master array need updating with changing temp etc?
     
     #compiling the master array
     master_compiled=master_compiler(master_array_dict,species)
@@ -977,12 +977,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     
     #import the jacobian function to create the jacobian dictionary which is a
     #dictionary of compiled calculations
-    #spec = importlib.util.spec_from_file_location("jac.jacobian_calc",\
-    #                                              "%s/%s/Jacobian.py" % (path,output_folder))
-        
     spec = importlib.util.spec_from_file_location("jac.jacobian_calc",\
-                                                  "%s/%s/Jacobian.py" % (path,custom_name+'_c0_r'+str(iroom+1))) #JGL: DOES JACOBIAN NEED UPDATING WITH CHANGING TEMP ETC?   
-        
+                                                  "%s/%s/Jacobian.py" % (path,output_folder[:-2]+'00'))
     jac = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(jac)
     #jac = importlib.import_module(path+output_folder+".Jacobian")
