@@ -14,5 +14,3 @@ module load tqdm/4.56.2-GCCcore-10.2.0
 module load numba/0.52.0-foss-2020b
 
 python settings_serial.py
-
-
