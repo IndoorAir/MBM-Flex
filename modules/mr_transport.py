@@ -14,7 +14,7 @@ def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol
 
     output_data_before_transport={}
     for iroom in range(0, nroom):
-        out_dir = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom+1),'c{:02d}'.format(ichem_only-1)))
+        out_dir = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem_only-1)))
         with open(("%s/%s" % (out_dir,'restart_data.pickle')),'rb') as handle:
             output_data_before_transport[iroom]=pickle.load(handle)
 
@@ -46,7 +46,7 @@ def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol
                  - output_data_before_transport[iroom_trans_orig])))
         output_data_after_transport[iroom_trans_orig] = \
             output_data_after_transport[iroom_trans_orig]/(mrvol[iroom_trans_orig]*1.0E6)
-        out_dir = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom_trans_orig+1),'c{:02d}'.format(ichem_only-1)))
+        out_dir = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom_trans_orig+1),'c{:04d}'.format(ichem_only-1)))
         with open(("%s/%s" % (out_dir,'restart_data.pickle')),'wb') as handle:
             pickle.dump(output_data_after_transport[iroom_trans_orig],handle)
 

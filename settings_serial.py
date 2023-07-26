@@ -65,7 +65,7 @@ pressure_Pa = 101325   # atmospheric pressure is constant and is the same in all
 # =============================================================================================== #
 # Integration settings and time control
 
-dt = 120     # Time between outputs (s), simulation may fail if this is too large
+dt = 150     # Time between outputs (s), simulation may fail if this is too large
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
@@ -75,7 +75,7 @@ end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Set length of chemistry-only integrations between simple treatments of
 # transport (assumed separable)
-tchem_only = 600     # NB: must be < 3600 seconds
+tchem_only = 300     # NB: must be < 3600 seconds
 
 # Calculate nearest whole number of chemistry-only integrations,
 # approximating seconds_to_integrate
@@ -443,7 +443,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         # Each output_sub_dir is located inside output_main_dir and includes the room number (iroom)
         # and the chemistry-only integration step (ichem_only)
-        output_sub_dir = ('%s_%s' % ('room{:02d}'.format(iroom+1),'c{:02d}'.format(ichem_only)))
+        output_sub_dir = ('%s_%s' % ('room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem_only)))
         output_folder = ('%s/%s' % (output_main_dir,output_sub_dir))
         os.mkdir('%s/%s' % (path,output_folder))
         with open('%s/__init__.py' % output_folder,'w') as f:

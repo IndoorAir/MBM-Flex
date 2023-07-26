@@ -623,8 +623,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     # on the first call to inchem_main.py for each room
     if ichem_only==0:
         from shutil import copyfile
-        copyfile(settings_file, "%s/%s/%s_settings.py" % (path,output_folder[:-10],custom_name))
-        copyfile(filename, "%s/%s/%s_mechanism.fac" % (path,output_folder[:-10],custom_name))
+        copyfile(settings_file, "%s/%s/%s_settings.py" % (path,output_folder[:-12],custom_name))
+        copyfile(filename, "%s/%s/%s_mechanism.fac" % (path,output_folder[:-12],custom_name))
     
     t_bound = t0+seconds_to_integrate #Maximum time to integrate to
     iters = 0 #the number of iterations that have been performed already (leave as 0)
@@ -964,7 +964,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     
     if ichem_only>0:  #JGL: For all but first call to inchem_main.py for each room, load saved master_array_dict
     
-        with open('%s/%s/master_array.pickle' % (path,output_folder[:-2]+'00'), 'rb') as handle:
+        with open('%s/%s/master_array.pickle' % (path,output_folder[:-4]+'0000'), 'rb') as handle:
             master_array_dict = pickle.load(handle) #JGL: does master array need updating with changing temp etc?
     
     #compiling the master array
@@ -978,7 +978,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     #import the jacobian function to create the jacobian dictionary which is a
     #dictionary of compiled calculations
     spec = importlib.util.spec_from_file_location("jac.jacobian_calc",\
-                                                  "%s/%s/Jacobian.py" % (path,output_folder[:-2]+'00'))
+                                                  "%s/%s/Jacobian.py" % (path,output_folder[:-4]+'0000'))
     jac = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(jac)
     #jac = importlib.import_module(path+output_folder+".Jacobian")

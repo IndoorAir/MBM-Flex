@@ -59,7 +59,7 @@ def initial_conditions(initial_filename,M,species,rate_numba,calc_dict,particles
             #in_data = pickle.load(handle)
         #JGL: Added specificity w.r.t. output_folder, ichem_only and iroom, and
         # pointed to restart_data cf. out_data
-        input_folder = ('%s%s' % (output_folder[:-2],'{:02d}'.format(int(output_folder[-2:])-1)))
+        input_folder = ('%s%s' % (output_folder[:-4],'{:04d}'.format(int(output_folder[-4:])-1)))
         in_data = pd.read_pickle('%s/%s/%s' % (path,input_folder,'restart_data.pickle')) 
         index_values = in_data.index.values
         print('index_values=',index_values) #JGL
