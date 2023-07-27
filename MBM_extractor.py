@@ -30,68 +30,48 @@ species_to_plot in a csv and a png respectively. These are saved in the
 output_folder
 """
 
-'''
-Variables to change
-'''
+# Import modules
+import os
+import pandas as pd
 
-nroom = 2     # number of rooms
-nchem = 3     # number of iterations
-main_dir = '20230726_145738_Test_Serial'
+# =============================================================================================== #
+# Variables to change
 
-#directories of data to extract and plot
-# out_directories=[
-#     '20230727_160445_Bergen_urban']
+main_output_dir = '20230726_145738_Test_Serial'
+nroom = 3     # number of rooms
+nchem = 10
 
 #species to extract and plot
-species_to_extract=['LIMONENE','BENZENE','TOLUENE','OH_reactivity',
-                 'OH_production','J1']
-#All species will be saved to a seperate csv for each input directory.
-#A maximum of three seperate graphs will be made; species concentrations,
+species_to_extract=['O3','OH_reactivity','OH_production','J1']
+#All species will be saved to a separate csv for each input directory.
+#A maximum of three separate graphs will be made; species concentrations,
 #reactivity, and production.
 
-#times to plot from and to
-start_time = 0
-end_time = 3600
+# output_folder to save the csv files. Can already exist or it will be created.
+output_folder = ('%s/extracted_outputs' % main_output_dir)
 
-scale = "hours"
-#can be "hours", "minutes", "seconds"
+# =============================================================================================== #
+# Extract the data and save to csv files
 
-#folder to save csv and png graphs to output_folder. Can already exist or
-#it will be created
-output_folder = "extracted_outputs"
-
-#should the y scale be log or not. Boolean
-log_plot = False
-
-'''
-Extract and plot the data
-'''
-#import required packages
-import pickle
-import os
-import matplotlib.pyplot as plt
-import numpy as np
-
-#define dictionary of output dataframes from out_directories
 for iroom in range(0,nroom):
+
+    #directories of data to extract and plot
     out_directories = []
     for ichem in range (0,nchem):
-        out_directories.append('%s/%s_%s' % (main_dir,'room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem)))
-    print(out_directories)
-    print("---------")
-    # out_data={}
-    # for i in out_directories:
-    #     print(i)
-    # with open("%s/out_data.pickle" % i,'rb') as handle:
-    #     out_data[i]=pickle.load(handle)
+        out_directories.append('%s/%s_%s' % (main_output_dir,'room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem)))
 
-# #get the current working directory and create the output folder
-# #if it doesn't exist
-# path=os.getcwd()
-# if not os.path.exists('%s/%s' % (path,output_folder)):
-#     os.mkdir('%s/%s' % (path,output_folder))
+    #define dictionary of output dataframes from out_directories
+    out_data = {}
+    for i in out_directories:
+        with open('%s/out_data.pickle' % i, 'rb') as handle:
+            out_data[i] = pd.read_pickle(handle)
 
-# #create and save csvs
-# for i in out_data:
-#     out_data[i].to_csv("%s/%s/%s.csv" % (path,output_folder,i),
-#                        columns = species_to_extract)
+    #get the current working directory and create the output folder if it doesn't exist  
+    path=os.getcwd()
+    if not os.path.exists('%s/%s' % (path,output_folder)):
+        os.mkdir('%s/%s' % (path,output_folder))
+
+    #create and save csvs
+    for i in out_data:
+        out_data[i].to_csv('%s/%s/%s.csv' % (path,output_folder,'room{:02d}'.format(iroom+1)),
+                           columns=species_to_extract)
