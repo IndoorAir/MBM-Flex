@@ -2,3 +2,4 @@ tmp*
 [0-9]*
 __pycache__/
 *.backup
+.Rhistory

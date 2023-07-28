@@ -1,12 +1,21 @@
 #
 
-dir <- "20230727_191734_TestSerial"
+main.output <- "20230727_191734_TestSerial"
 
-setwd(dir)   # folder with all outputs of the model run
-nroom <- 3    # number of rooms
+setwd(main.output)   # folder with all outputs of the model run
 
-df <- read.csv(paste("extracted_outputs/", dir, "_room01.csv", sep=""))
+output.files <- list.files("extracted_outputs")
 
-print(head(df))
+nroom <- length(output.files) - 1
+
+list.out <- list()
+for (n in 1:nroom) {
+  fname <- paste0(main.output, sprintf("_room%02d",n), ".csv")
+  df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
+  list.out[[n]] <- df
+}
+
+fname <- paste0(main.output, "_outdoor.csv")
+df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
 
 setwd("../")

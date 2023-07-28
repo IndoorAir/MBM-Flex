@@ -82,7 +82,7 @@ for iroom in range(0,nroom):
 
     # extract those variables listed in vars_to_extract that exist outdoors
     outvars_to_extract = []
-    if iroom == 0:
+    if iroom == 0: # use output of ROOM 1 for outdoor variables
         for v in vars_to_extract:
             vout = v+'OUT'
             if vout in out_merged.columns:
