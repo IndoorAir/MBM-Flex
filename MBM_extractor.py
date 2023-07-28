@@ -23,35 +23,38 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
-
-This script inputs the out_data.pickle files from model runs of MBM-Flex
-from specified output directories, sand aves the species given in
-species_to_plot in a csv file for each room. The csv files are saved in the
-extracted_outputs folder .
 """
+
+# This script reads the `out_data.pickle` files from all iterations of an MBM-Flex
+# model run in a specified output directory, and saves the variables given by the
+# user (vars_to_extract) to a csv file for each room. If the variable exist outdoors,
+# it is saved in a separate csv file. All csv files are stored in the "extracted_outputs/"
+# folder, inside the main output directory.
 
 # Import modules
 import os
 import pandas as pd
 
 # =============================================================================================== #
-# Variables to change
+# User-specified model variables to extract
 
-main_output_dir = '20230727_191734_TestSerial'   # folder with all outputs of the model run
+main_output_dir = '20230727_175901_TestSerial'   # folder with all outputs of the model run
 nroom = 3    # number of rooms
 
 total_seconds_to_integrate = 7200   # total duration of the model run (see `settings_serial.py`)
 tchem_only = 300   # duration of chemistry-only integrations (see `settings_serial.py`)
 nchem = int(total_seconds_to_integrate/tchem_only)
 
-# Model variables to extract
-species_to_extract=['O3','NO','NO2','OH_reactivity','J4']
+# Model variables to extract - Note that there is no need to include outdoors variables:
+# if the variable exist outdoors it will be extracted automatically
+vars_to_extract = ['O3','NO','NO2','CO','OH_reactivity','J4','temp']
 
-# The extracted_outputs folder where the csv files are saved is inside the main_output_dir
+# The "extracted_outputs" folder where the csv files are saved is inside `main_output_dir`
 output_folder = ('%s/extracted_outputs' % main_output_dir)
 
 # =============================================================================================== #
-# Extract the selected variables and save them to one csv files per room
+# Extract the selected variables and save them to one csv files per room, plus one csv files for
+# outdoors concentrations
 
 for iroom in range(0,nroom):
 
@@ -65,6 +68,7 @@ for iroom in range(0,nroom):
     for i in out_directories:
         with open('%s/out_data.pickle' % i, 'rb') as handle:
             out_data[i] = pd.read_pickle(handle)
+            df = out_data[i]
 
     # create the extracted_outputs folder if it doesn't exist
     path=os.getcwd()
@@ -74,4 +78,16 @@ for iroom in range(0,nroom):
     # join all output for a room and save it to the corresponding csv file
     out_merged = pd.concat(out_data.values())
     out_merged.to_csv('%s/%s/%s_%s.csv' % (path,output_folder,main_output_dir,'room{:02d}'.format(iroom+1)),
-                      columns=species_to_extract, index_label='Time')
+                      columns=vars_to_extract, index_label='Time')
+
+    # extract those variables listed in vars_to_extract that exist outdoors
+    outvars_to_extract = []
+    if iroom == 0:
+        for v in vars_to_extract:
+            vout = v+'OUT'
+            if vout in out_merged.columns:
+                outvars_to_extract.append(vout)
+        out_merged.to_csv('%s/%s/%s_%s.csv' % (path,output_folder,main_output_dir,'outdoor'),
+                      columns=outvars_to_extract, index_label='Time')
+
+print('*** Selected variables extracted and saved to %s/ ***' % output_folder)
