@@ -1,62 +1,69 @@
 ## R script to plot output of MBM-Flex
 ## ----------------------------------------
+library(ggplot2)
+library(scales)
 
 ## directory with all outputs of the model run
 main.output <- "20230727_191734_TestSerial"
 
 ## ----------------------------------------
-
-#setwd(main.output)
+setwd(main.output)
 
 output.files <- list.files("extracted_outputs/")
 
 nroom <- length(output.files) - 1
 
-## output files of each room
-output.list <- list()
+## model output: indoor values in each room
+indoor.df <- data.frame()
 for (n in 1:nroom) {
   fname <- paste0(main.output, sprintf("_room%02d",n), ".csv")
-  out.df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
-  output.list[[n]] <- out.df
+  ind.df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
+  ind.df$ROOM <- paste0("R", n)
+  indoor.df <- rbind(indoor.df, ind.df)
 }
 
-## output file: outdoor concentrations
+## model output: outdoor values
 fname <- paste0(main.output, "_outdoor.csv")
-outdoor <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
-
-## WHO air quality guidelines (2021)
-who.df <- data.frame(PM25=c(5,15), PM10=c(15,45), O3=c(60,100),
-                     NO2=c(10,25), SO2=c(40), CO=c(4))
-
-## TODO: convert WHO guidelines from ug/m3
+outdoor.df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
 
 ## ----------------------------------------
+## WHO air quality guidelines (2021)
+## https://www.who.int/publications/i/item/9789240034228
 
-## get list of variables to plot from ROOM 1
-room1 <- output.list[[1]]
-vars.list <- names(room1)
+## units in ug/m3
+who.aer <- data.frame(PM25=c(5,15), PM10=c(15,45))
+who.gas <- data.frame(O3=c(60,100), NO2=c(10,25), SO2=c(40), CO=c(4000))
 
+# convert to molecule cm-3 assuming standard temperature and pressure
+# according to WHO guidelines 1 ppb = 2 ug/m3
+who.df <- cbind(who.aer, (who.gas*0.5*2.46e10))
+
+## ----------------------------------------
 ## make plots
+
 ## pdf file saved in directory `main.output`
 pdf("mbmflex.pdf", paper="a4r", width=0, height=0)
 
-for (i in 2:length(vars.list)) {
+room.list <- unique(indoor.df$ROOM)
+vars.list <- names(indoor.df)
+for (i in 2:(length(vars.list)-1)) {
   vars <- vars.list[i]
-  plot(room1[,1], room1[,i], type="l", main="", xlab="Time", ylab=vars)
-  for (n in 2:nroom) {
-    room <- output.list[[n]]
-    lines(room[,1], room[,i])
-  }
-  ## plot outdoor concentrations (if available)
+  p <- ggplot(data=indoor.df, aes(x=Time, y=.data[[vars]], color=ROOM, name="")) +
+    geom_line(linewidth=2) + labs(color=guide_legend(title=""))
+  ## plot ambient concentrations (if available)
   vars.out <- paste0(vars, "OUT")
-  if(vars.out %in% names(outdoor)) {
-    lines(outdoor[,1], outdoor[,which(names(outdoor)==vars.out)])
+  if(vars.out %in% names(outdoor.df)) {
+    p <- p + geom_line(data=outdoor.df, aes(x=Time, y=.data[[vars.out]], color="black"),
+                       linewidth=2, linetype="dashed") +
+      scale_color_manual(values=c("black", hue_pal()(nroom)), labels=c("Ambient",unique(room.list)))
   }
   ## plot WHO guidelines (if available)
   if (vars %in% names(who.df)) {
-    abline(who.df[which(names(who.df)==vars)])
+    guidel <- who.df[[which(names(who.df)==vars)]]
+    p <- p + geom_hline(yintercept=guidel, linetype="dotted", color="black")
   }
+  print(p)
 }
 dev.off()
 
-#setwd("../")
+setwd("../")
