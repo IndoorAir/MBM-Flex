@@ -1,30 +1,36 @@
-## R script to plot output of MBM-Flex
+## R script to plot the output of MBM-Flex
+##
+## NB: execute from the MBM-Flex directory
 ## ----------------------------------------
 library(ggplot2)
 library(scales)
 
-## directory with all outputs of the model run
+## set directory of model run outputs
 main.output <- "20230727_191734_TestSerial"
-
-## ----------------------------------------
 setwd(main.output)
 
-output.files <- list.files("extracted_outputs/")
+## set filename of pdf file for plots
+pdfname <- "mbmflex_output.pdf"
 
+## ----------------------------------------
+output.dir <- "extracted_outputs/"
+output.files <- list.files(output.dir)
+
+# number of rooms
 nroom <- length(output.files) - 1
 
-## model output: indoor values in each room
+## import model output: indoor values in each room
 indoor.df <- data.frame()
 for (n in 1:nroom) {
   fname <- paste0(main.output, sprintf("_room%02d",n), ".csv")
-  ind.df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
+  ind.df <- read.csv(paste0(output.dir, fname), header=TRUE)
   ind.df$ROOM <- paste0("R", n)
   indoor.df <- rbind(indoor.df, ind.df)
 }
 
-## model output: outdoor values
+## import model output: outdoor values
 fname <- paste0(main.output, "_outdoor.csv")
-outdoor.df <- read.csv(paste0("extracted_outputs/", fname), header=TRUE)
+outdoor.df <- read.csv(paste0(output.dir, fname), header=TRUE)
 
 ## ----------------------------------------
 ## WHO air quality guidelines (2021)
@@ -39,10 +45,9 @@ who.gas <- data.frame(O3=c(60,100), NO2=c(10,25), SO2=c(40), CO=c(4000))
 who.df <- cbind(who.aer, (who.gas*0.5*2.46e10))
 
 ## ----------------------------------------
-## make plots
 
-## pdf file saved in directory `main.output`
-pdf("mbmflex.pdf", paper="a4r", width=0, height=0)
+## plot model output and save to pdf file
+pdf(paste0(output.dir, pdfname), paper="a4r", width=0, height=0)
 
 room.list <- unique(indoor.df$ROOM)
 vars.list <- names(indoor.df)
@@ -66,4 +71,5 @@ for (i in 2:(length(vars.list)-1)) {
 }
 dev.off()
 
+## return to MBM-Flex directory
 setwd("../")
