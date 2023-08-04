@@ -35,7 +35,9 @@ Variables to change
 '''
 #directories of data to extract and plot
 out_directories=[
-    '20230727_160445_Bergen_urban']
+    '20210211_152040_test1',
+    '20210212_151525_test2',
+    '20210212_153517_test3']
 
 #species to extract and plot
 species_to_extract=['LIMONENE','BENZENE','TOLUENE','OH_reactivity',
@@ -82,7 +84,7 @@ if not os.path.exists('%s/%s' % (path,output_folder)):
 #create and save csvs
 for i in out_data:
     out_data[i].to_csv("%s/%s/%s.csv" % (path,output_folder,i), 
-                       columns = species_to_extract)
+                       columns = species_to_extract, index_label='Time (s)')
     
 #plotting function
 def plotting_function(plot_species,out_data,units,start_time,end_time,name,log_plot):
