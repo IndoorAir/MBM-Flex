@@ -51,7 +51,7 @@ custom = False   # Custom reactions that are not in the MCM or in the INCHEM mec
 
 diurnal = True   # Diurnal outdoor concentrations. Boolean
 
-city = 'Bergen_urban'   # Source city of outdoor concentrations of O3, NO, NO2, and PM2.5
+city = 'London_urban'   # Source city of outdoor concentrations of O3, NO, NO2, and PM2.5
                         # Options are 'London_urban', 'London_suburban' or 'Bergen_urban'
                         # Changes to outdoor concentrations can be done in outdoor_concentrations.py
                         # See the INCHEM-Py manual for details of sources and fits
@@ -69,13 +69,13 @@ dt = 150     # Time between outputs (s), simulation may fail if this is too larg
              # also used as max_step for the scipy.integrate.ode integrator
 t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
-# Set how long to run the model in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 3600     # NB: must be > tchem_only
-end_of_total_integration = t0 + total_seconds_to_integrate
-
-# Set length of chemistry-only integrations between simple treatments of
+# Set duration of chemistry-only integrations between simple treatments of
 # transport (assumed separable)
 tchem_only = 300     # NB: must be < 3600 seconds
+
+# Set total duration of the model run in seconds (86400 seconds is 1 day)
+total_seconds_to_integrate = 7200     # NB: MUST BE A MULTIPLE OF tchem_only !!
+end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
 # approximating seconds_to_integrate
@@ -96,7 +96,7 @@ print('Seconds_to_integrate set to:',seconds_to_integrate)
 
 # An output pickle file is automatically saved so that all data can be recovered
 # at a later date for analysis. Applies to folder name and settings file copy name.
-custom_name = 'Test_Serial'
+custom_name = 'TestSerial'
 
 # INCHEM-Py calculates the rate constant for each reaction at every time point
 # Setting reactions_output to True saves all reactions and their assigned constant

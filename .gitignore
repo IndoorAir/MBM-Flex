@@ -1,5 +1,5 @@
 tmp*
 [0-9]*
-extracted_outputs
 __pycache__/
 *.backup
+.Rhistory
