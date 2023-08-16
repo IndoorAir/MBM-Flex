@@ -1,9 +1,11 @@
 #!/bin/bash
 #SBATCH --ntasks 1
-#SBATCH --time 1:30:00
-#SBATCH --account=levinejg-gi4raq
+#SBATCH --time 72:00:00
 #SBATCH --qos=bbdefault
 #SBATCH --mail-type ALL
+#SBATCH --job-name=mbm_full
+#SBATCH -o mbmflex.log
+#SBATCH -e mbmflex_error.log
 
 set -e
 
