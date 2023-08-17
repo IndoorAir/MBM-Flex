@@ -38,16 +38,21 @@ import pandas as pd
 # =============================================================================================== #
 # User-specified model variables to extract
 
-main_output_dir = '20230727_175901_TestSerial'   # folder with all outputs of the model run
+main_output_dir = '20230816_125453_TestSerial'   # folder with all outputs of the model run
 nroom = 3    # number of rooms
 
-total_seconds_to_integrate = 7200   # total duration of the model run (see `settings_serial.py`)
+total_seconds_to_integrate = 3600*24   # total duration of the model run (see `settings_serial.py`)
 tchem_only = 300   # duration of chemistry-only integrations (see `settings_serial.py`)
 nchem = int(total_seconds_to_integrate/tchem_only)
 
 # Model variables to extract - Note that there is no need to include outdoors variables:
 # if the variable exist outdoors it will be extracted automatically
-vars_to_extract = ['O3','NO','NO2','CO','OH_reactivity','J4','temp']
+vars_to_extract = [
+    'O3','NO','NO2','HONO','HNO3','CO','APINENE','BPINENE','LIMONENE',
+    'BENZENE','TOLUENE','TCE','OH','HO2','CH3O2','RO2','H2O','M',
+    'H2O2','adults','children',
+    'OH_reactivity','OH_production','J4','temp','ACRate','tsp','tspx',
+                    ]
 
 # The "extracted_outputs" folder where the csv files are saved is inside `main_output_dir`
 output_folder = ('%s/extracted_outputs' % main_output_dir)
@@ -67,8 +72,8 @@ for iroom in range(0,nroom):
     out_data = {}
     for i in out_directories:
         with open('%s/out_data.pickle' % i, 'rb') as handle:
-            out_data[i] = pd.read_pickle(handle)
-            df = out_data[i]
+            df = pd.read_pickle(handle)
+            out_data[i] = df.drop(df.index[-1])
 
     # create the extracted_outputs folder if it doesn't exist
     path=os.getcwd()
@@ -90,4 +95,4 @@ for iroom in range(0,nroom):
         out_merged.to_csv('%s/%s/%s_%s.csv' % (path,output_folder,main_output_dir,'outdoor'),
                       columns=outvars_to_extract, index_label='Time')
 
-print('*** Selected variables extracted and saved to %s/ ***' % output_folder)
+print('\n*** Selected variables extracted and saved to %s/ ***' % output_folder)

@@ -27,9 +27,10 @@ along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 
 # Import modules
 import os
+import sys
 import datetime
-from pandas import read_csv
 from math import ceil
+from pandas import read_csv
 
 # =============================================================================================== #
 # Basic model settings
@@ -74,7 +75,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 tchem_only = 300     # NB: must be < 3600 seconds
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 7200     # NB: MUST BE A MULTIPLE OF tchem_only !!
+total_seconds_to_integrate = 86400     # NB: MUST BE A MULTIPLE OF tchem_only !!
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
@@ -89,7 +90,7 @@ if nchem_only == 0:
 #print('nchem_only therefore set to',nchem_only)
 
 seconds_to_integrate = tchem_only
-print('Seconds_to_integrate set to:',seconds_to_integrate)
+#print('Seconds_to_integrate set to:',seconds_to_integrate)
 
 # =============================================================================================== #
 # Output settings
@@ -114,7 +115,7 @@ output_species = ['O3','O3OUT']
 # Setting the main output folder in the current working directory
 path=os.getcwd()
 now = datetime.datetime.now()
-output_main_dir = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"), custom_name))
+output_main_dir = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"),custom_name))
 os.mkdir('%s/%s' % (path,output_main_dir))
 
 # =============================================================================================== #
@@ -126,6 +127,7 @@ os.mkdir('%s/%s' % (path,output_main_dir))
 # 3. parameters and variables of each room: `*.csv` files in `room_config/` directory
 # =============================================================================================== #
 
+# select chemical mechanism
 if mechanism == 'full':
     filename = 'chem_mech/mcm_v331.fac'
 elif mechanism == 'subset':
@@ -133,8 +135,11 @@ elif mechanism == 'subset':
 elif mechanism == 'reduced':
     filename = 'chem_mech/rcs_2023.fac'
     particles = False # ensure particles are not active with the 'reduced' mechanism
+else:
+    sys.exit('! ERROR: please provide a valid mechanism (full, subset, reduced) !')
 print('Chemical mechanism set to:',filename)
 
+# directory with room configuration files
 config_dir = 'config_rooms/'
 
 # INPUT DATA: physical characteristics of the rooms
@@ -200,7 +205,7 @@ for iroom in range(0,nroom):
     mrtemplist = [[x,y] for x,y in zip(secsfrommn,mrtemp)]
     #print('mrtemplist=',mrtemplist)
 
-    mracrlist = {key:value for key,value in zip(secsfrommn,mracrate)}
+    mracrlist = dict(zip(secsfrommn,mracrate))
     #print('mracrlist=',mracrlist)
 
     all_mrtemp.append(mrtemplist)
@@ -258,6 +263,9 @@ for iroom in range(0,nroom):
 for ichem_only in range (0,nchem_only): # loop over chemistry-only integration periods
     #print('ichem_only=',ichem_only)
 
+    """
+    Transport between rooms
+    """
     if ichem_only > 0:
         #(1) Add simple treatment of transport between rooms here
         if (__name__ == "__main__") and (nroom >= 2):
@@ -292,7 +300,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #print('iroom=',iroom)
 
         """
-        Temperatures, humidity
+        Temperature, humidity, air density
         """
         # Temperatures are interpolated from a list of given values (`mr_tvar_room_params_*.csv`)
         # using either a 'Linear' or a 'BSpline' interpolation method. The list has the format:
@@ -307,7 +315,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #print('rel_humidity=',rel_humidity)
 
         mrt = all_mrtemp[iroom][itvar_params][1]
-        M = (pressure_Pa/(8.3144626*mrt))*(6.0221408e23/1e6) # number density of air (molecule cm^-3)
+        M = (pressure_Pa/(8.3144626*mrt))*(6.0221408e23/1e6) # air number density (molecule cm^-3)
         #print('M=',M)
 
         # Place any species you wish to remain constant in the below dictionary. Follow the format.
@@ -378,7 +386,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         O3_dep = True
 
         # AV is the surface to volume ratio (cm^-1)
-        AV = (mrsurfa[iroom]/mrvol[iroom])/100 # NB Factor of 1/100 converts units from m^-1 to cm^-1
+        AV = (mrsurfa[iroom]/mrvol[iroom])/100 # Factor of 1/100 converts units from m^-1 to cm^-1
 
         # deposition on different types of surface is used only if H2O2 and O3 deposition are active
         surfaces_AV = {             # (cm^-1)
@@ -397,8 +405,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         Breath emissions from humans
         """
-        adults = all_mradults[iroom][itvar_params]    #Number of adults in the room
-        children = all_mrchildren[iroom][itvar_params]   #Number of children in the room (10 years old)
+        adults = all_mradults[iroom][itvar_params]    # Number of adults
+        children = all_mrchildren[iroom][itvar_params]   # Number of children (10 years old)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
@@ -409,7 +417,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             initials_from_run = False
 
             # If initials_from_run is set to False then initial gas conditions must be available
-            # in the file specified by initial_conditions_gas, the inclusion of particles is optional.
+            # in the file specified by initial_conditions_gas. Inclusion of particles is optional.
             initial_conditions_gas = 'initial_concentrations.txt'
 
 
@@ -418,9 +426,10 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             # to the main folder and rename to in_data.pickle. The code will then take this
             # file and extract the concentrations from the time point closest to t0 as
             # initial conditions.
-            # NB: in_data.pickle must contain all of the species required, including particles if used.
+            # NB: in_data.pickle must contain all the required species, including particles if used.
         else:
-            # for all but the first chem-only integration, init concs taken from previous room-specific output
+            # for all but the first chem-only integration, the initial concentrations
+            # are taken from previous room-specific output
             initials_from_run = True
 
         """
@@ -430,8 +439,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # forced density changeat a specific point in time during the integration
         # The timed concentrations inputs are assigned using a dictionary with the following format:
         #
-        # timed_inputs = {species1:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]],
-        #                 species2:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]]}
+        # timed_inputs = {species1:[[start (s), end (s), rate of increase (mol/cm^3)/s]],
+        #                 species2:[[start (s), end (s), rate of increase (mol/cm^3)/s]]}
         timed_emissions = all_timemis[iroom]
         #print(timed_emissions)
 
@@ -447,9 +456,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         output_folder = ('%s/%s' % (output_main_dir,output_sub_dir))
         os.mkdir('%s/%s' % (path,output_folder))
         with open('%s/__init__.py' % output_folder,'w') as f:
-             pass # file created but left empty
-
-        print('Creating output folder:',output_folder)
+            pass # file created but left empty
+        #print('Creating output folder:',output_folder)
 
         # --------------------------------------------------------------------------- #
 
