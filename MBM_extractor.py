@@ -42,6 +42,7 @@ main_output_dir = '20230816_125453_TestSerial'   # folder with all outputs of th
 nroom = 3    # number of rooms
 
 total_seconds_to_integrate = 3600*24   # total duration of the model run (see `settings_serial.py`)
+
 tchem_only = 300   # duration of chemistry-only integrations (see `settings_serial.py`)
 nchem = int(total_seconds_to_integrate/tchem_only)
 

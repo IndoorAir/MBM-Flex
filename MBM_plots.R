@@ -47,13 +47,18 @@ who.gas <- data.frame(O3=c(60,100), NO2=c(10,25), SO2=c(NA,40), CO=c(NA,4000))
 # convert to molecule cm-3 assuming standard temperature and pressure
 # according to WHO guidelines 1 ppb = 2 ug/m3
 who.df <- cbind(who.aer, (who.gas*0.5*2.46e10))
-who.df$atime <- c("Annual", "24-hours")
+who.df$avg.time <- c("Annual", "24-hours")
+
 ## ----------------------------------------
 
 ## plot model output and save to pdf file
 pdf(paste0(output.dir, pdfname), paper="a4r", width=0, height=0)
+
+## list of rooms and variables to plot
 room.list <- unique(indoor.df$ROOM)
 vars.list <- names(indoor.df)
+
+## plot indoor variables in each room
 for (i in 2:(length(vars.list)-1)) {
   vars <- vars.list[i]
   gp <- ggplot(data=indoor.df, aes(x=Time, y=.data[[vars]], color=ROOM, name="")) +
