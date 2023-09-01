@@ -39,13 +39,13 @@ from pandas import read_csv
 # full : the complete MCM (5833 species, 17224 reactions)
 # subset : a subset of the MCM (2575 species, 7778 reactions)
 # reduced : the RCS mechanism (51 species, 137 reactions)
-mechanism = 'reduced'
+mechanism = 'subset'
 
-particles = False   # set to True if particles are included
+particles = True   # set to True if particles are included
                     # NB: the chemical mechanism must include at least one of
                     # a-pinene, b-pinene, limonene
 
-INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
+INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
 
 custom = False   # Custom reactions that are not in the MCM or in the INCHEM mechanism
                  # The format of this file is described in `custom_input.txt`
@@ -62,6 +62,10 @@ date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 lat = 45.4   # Latitude of simulation location
 
 pressure_Pa = 101325   # atmospheric pressure is constant and is the same in all rooms
+
+# human body surface/volume ratios
+bsa_bvi_adult = 0.28   # assume BSA = 1.8 m2 and BVI = 65 L
+bsa_bvi_child = 0.4    # assume BSA = 1.1 m2 and BVI = 28 L
 
 # =============================================================================================== #
 # Integration settings and time control
@@ -400,13 +404,16 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                        'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
                        'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
                        'AVHUMAN'    : 0.0000          # humans
-                       } # TODO: calculate AVHUMAN from number of people in the room? (note that this changes with time)
+                       }
 
         """
         Breath emissions from humans
         """
         adults = all_mradults[iroom][itvar_params]    # Number of adults
         children = all_mrchildren[iroom][itvar_params]   # Number of children (10 years old)
+
+        # AV ratio for humans calculated using an average body surface area and volume
+        surfaces_AV['AVHUMAN'] = (adults * bsa_bvi_adult) + (children * bsa_bvi_child)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
