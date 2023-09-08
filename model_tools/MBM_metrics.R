@@ -7,6 +7,11 @@
 ## 2) set the name of the csv file to save the calculate metrics (`csvname`)
 ## 3) source the script from its directory (`MBM-Flex/model/tools/`)
 ##
+## The script calculates the average occupancy of each room, the mean
+## and max concentrations, and the fraction of time when the
+## concentrations exceed the WHO air quality guidelines -- overall,
+## when adults are in the room, and when children are in the
+## room. These metrics are saved to csv file for further analysis.
 ## ---------------------------------------------------------------------
 
 ## set the directory containing the model output
@@ -57,11 +62,12 @@ who.df <- cbind(who.aer, who.gas)
 ## number of timesteps
 n.step <- nrow(indoor.df)
 
+## initialize data.frame for the exposure metrics
 metrics.df <- data.frame(Species=NA, Metrics=NA)
 
+## calculate exposure metrics in each room
 for (n in 1:n.room) {
   room.df <- indoor.df[which(indoor.df$ROOM == paste("Room", n)),]
-
   metrics.df[,paste("Room", n)] <- NA
 
   ## number of people in the room
@@ -69,104 +75,111 @@ for (n in 1:n.room) {
   n.children <- room.df$children
 
   metrics.df[1,1] <- NA
-  metrics.df[1,2] <- "Average number of adults"
+  metrics.df[1,2] <- "Mean number of adults in the room"
   metrics.df[1,n+2] <- mean(n.adults, na.rm=T)
 
   metrics.df[2,1] <- NA
-  metrics.df[2,2] <- "Average number of children"
+  metrics.df[2,2] <- "Mean number of children in the room"
   metrics.df[2,n+2] <- mean(n.children, na.rm=T)
 
-  # select only chemical variables (gas-phase species and total suspended particles)
+  ## select chemical variables (gas-phase species and total suspended particles)
   conc.df <- within(room.df, rm(adults, children))
 
+  ## calculate exposure metrics for each chemical variable
   j <- 3
   for (i in 2:(ncol(conc.df)-1)) {
     var.name <- names(conc.df)[i]
 
     ## convert gas phase species to ug/m3 assuming standard temperature
     ## and pressure -- according to WHO guidelines 1 ppb = 2 ug/m3
-    if (var.name != "tspx") {
+    if (var.name != "tspx") {    ## total suspended particles
       var.df <- conc.df[[i]]*2/2.46e10
-    } else {
+    } else {    ## gas-phase species
       var.df <- conc.df[[i]]
     }
 
+    ## select periods when adults/children are in the room
     adults.df <- var.df[which(n.adults>0)]
     children.df <- var.df[which(n.children>0)]
 
+    ## average concentrations
     metrics.df[j,1] <- var.name
     metrics.df[j,2] <- "Mean concentration (ug/m3)"
     metrics.df[j,n+2] <- mean(var.df, na.rm=T)
 
     metrics.df[j+1,1] <- var.name
-    metrics.df[j+1,2] <- "Mean concentration when adults in the room (ug/m3)"
+    metrics.df[j+1,2] <- "Mean concentration when adults are in the room (ug/m3)"
     metrics.df[j+1,n+2] <- mean(adults.df, na.rm=T)
 
     metrics.df[j+2,1] <- var.name
-    metrics.df[j+2,2] <- "Mean concentration when children in the room (ug/m3)"
+    metrics.df[j+2,2] <- "Mean concentration when children are in the room (ug/m3)"
     metrics.df[j+2,n+2] <- mean(children.df, na.rm=T)
 
+    ## max concentrations
     metrics.df[j+3,1] <- var.name
     metrics.df[j+3,2] <- "Max concentration (ug/m3)"
     metrics.df[j+3,n+2] <- max(var.df, na.rm=T)
 
     metrics.df[j+4,1] <- var.name
-    metrics.df[j+4,2] <- "Max concentration when adults in the room (ug/m3)"
+    metrics.df[j+4,2] <- "Max concentration when adults are in the room (ug/m3)"
     metrics.df[j+4,n+2] <- max(adults.df, na.rm=T)
 
     metrics.df[j+5,1] <- var.name
-    metrics.df[j+5,2] <- "Max concentration when children in the room (ug/m3)"
+    metrics.df[j+5,2] <- "Max concentration when children are in the room (ug/m3)"
     metrics.df[j+5,n+2] <- max(children.df, na.rm=T)
 
     ## fractional time when concentrations exceed the WHO guidelines
     if (var.name %in% names(who.df)) {
       who.gl <- who.df[[which(names(who.df)==var.name)]]
 
+      ## overall
       metrics.df[j+6,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+6,2] <- "Time exceeding WHO guidelines (Peak season) (%)"
+        metrics.df[j+6,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 (Peak season) (%)")
       } else {
-        metrics.df[j+6,2] <- "Time exceeding WHO guidelines (Annual) (%)"
+        metrics.df[j+6,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 (Annual) (%)")
       }
       metrics.df[j+6,n+2] <- 100*length(which(var.df > who.gl[1]))/n.step
 
       metrics.df[j+7,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+7,2] <- "Time exceeding WHO guidelines (8-hour) (%)"
+        metrics.df[j+7,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 (8-hour) (%)")
       } else {
-        metrics.df[j+7,2] <- "Time exceeding WHO guidelines (24-hour) (%)"
+        metrics.df[j+7,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 (24-hour) (%)")
       }
       metrics.df[j+7,n+2] <- 100*length(which(var.df > who.gl[2]))/n.step
 
+      ## with adults in the room
       metrics.df[j+8,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+8,2] <- "Time exceeding WHO guidelines when adults in the room (Peak season) (%)"
+        metrics.df[j+8,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 when adults are in the room (Peak season) (%)")
       } else {
-        metrics.df[j+8,2] <- "Time exceeding WHO guidelines when adults in the room (Annual) (%)"
+        metrics.df[j+8,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 when adults are in the room (Annual) (%)")
       }
       metrics.df[j+8,n+2] <- 100*length(which(adults.df > who.gl[1]))/n.step
 
       metrics.df[j+9,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+9,2] <- "Time exceeding WHO guidelines when adults in the room (8-hour) (%)"
+        metrics.df[j+9,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 when adults are in the room (8-hour) (%)")
       } else {
-        metrics.df[j+9,2] <- "Time exceeding WHO guideline when adults in the rooms (24-hour) (%)"
+        metrics.df[j+9,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 when adults are in the rooms (24-hour) (%)")
       }
       metrics.df[j+9,n+2] <- 100*length(which(adults.df > who.gl[2]))/n.step
 
+      ## with children in the room
       metrics.df[j+10,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+10,2] <- "Time exceeding WHO guidelines when children in the room (Peak season) (%)"
+        metrics.df[j+10,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 when children are in the room (Peak season) (%)")
       } else {
-        metrics.df[j+10,2] <- "Time exceeding WHO guidelines when children in the room (Annual) (%)"
+        metrics.df[j+10,2] <- paste("Time exceeding WHO guideline of", who.gl[1], "ug/m3 when children are in the room (Annual) (%)")
       }
       metrics.df[j+10,n+2] <- 100*length(which(children.df > who.gl[1]))/n.step
 
       metrics.df[j+11,1] <- var.name
       if (var.name == "O3") {
-        metrics.df[j+11,2] <- "Time exceeding WHO guidelines when children in the room (8-hour) (%)"
+        metrics.df[j+11,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 when children are in the room (8-hour) (%)")
       } else {
-        metrics.df[j+11,2] <- "Time exceeding WHO guidelines when children in the room (24-hour) (%)"
+        metrics.df[j+11,2] <- paste("Time exceeding WHO guideline of", who.gl[2], "ug/m3 when children are in the room (24-hour) (%)")
       }
       metrics.df[j+11,n+2] <- 100*length(which(children.df > who.gl[2]))/n.step
 
@@ -177,7 +190,7 @@ for (n in 1:n.room) {
   }
 }
 
-##
+## output exposure metrics to csv file
 writeLines(paste("Exposure metrics from MBM-Flex model run,", main.output), csvname)
 write.table(metrics.df, csvname, sep=",", row.names=F, col.names=T, append=T)
 
