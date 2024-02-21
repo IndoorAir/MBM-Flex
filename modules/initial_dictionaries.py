@@ -62,25 +62,25 @@ def initial_conditions(initial_filename,M,species,rate_numba,calc_dict,particles
         input_folder = ('%s%s' % (output_folder[:-4],'{:04d}'.format(int(output_folder[-4:])-1)))
         in_data = pd.read_pickle('%s/%s/%s' % (path,input_folder,'restart_data.pickle')) 
         index_values = in_data.index.values
-        print('index_values=',index_values) #JGL
+        #print('index_values=',index_values) #JGL
         pos = bisect_left(index_values, t0)
-        print('pos=',pos) #JGL
+        #print('pos=',pos) #JGL
         if pos == 0:
             index_import = index_values[0]
-            print('index_import=',index_import) #JGL
+            #print('index_import=',index_import) #JGL
         if pos == len(index_values):
             index_import = index_values[-1]
-            print('index_import=',index_import) #JGL
+            #print('index_import=',index_import) #JGL
         before = index_values[pos - 1]
-        print('before=',before) #JGL
+        #print('before=',before) #JGL
         after = index_values[pos]
-        print('after=',after) #JGL
-        print('t0=',t0) #JGL
+        #print('after=',after) #JGL
+        #print('t0=',t0) #JGL
         if after - t0 < t0 - before:
            index_import = after
         else:
            index_import = before
-        print('index_import=',index_import) #JGL
+        #print('index_import=',index_import) #JGL
                
         density_dict = {}
         for i in species:

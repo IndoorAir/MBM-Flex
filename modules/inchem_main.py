@@ -54,7 +54,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     from threadpoolctl import threadpool_limits
     import importlib.util
     import pandas as pd
-    import os
+    #import os   # (not used)
     import datetime
     import math
     import time as timing
@@ -527,13 +527,13 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         #integrate
         while r.successful() and r.t<t_bound_internal:
             print('Iteration ', iters+1,'/', total_iter,'¦',r.t,' to ',r.t+dt)
-            print('Got here 1')  #JGL
+            #print('Got here 1')  #JGL
             r.integrate(r.t+dt)
-            print('Got here 2')  #JGL
+            #print('Got here 2')  #JGL
             iters=iters+1
-            print('Got here 3')  #JGL
+            #print('Got here 3')  #JGL
             ret=r.get_return_code()
-            print('Got here 4')  #JGL
+            #print('Got here 4')  #JGL
             if iters % save_rate == 0: #output every save_rate iterations
                 dt_out.append(int(r.t))
                 iter_time.append(timing.time()-start_time)
@@ -570,7 +570,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
                     if "numba" not in i:
                         calculated_output[i].append(calc_dict[i])
                         
-            print('Got here 5')  #JGL
+            #print('Got here 5')  #JGL
         return dt_out,n_new,iters,ret,iter_time,calculated_output
        
     '''
@@ -909,7 +909,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     density_dict['RO2']=ppool_density_calc(density_dict,ppool)
     
     #calculating t0 summations
-    summations_dict={}  # JGL: NB Only sum of RO2 is currently saved to out_data.pickle and read from in_data.pickle - must save/read all speciated concs to avoid accumulating errors with nchem_only>1?
+    summations_dict={}  # JGL: NB Only sum of RO2 is currently saved to out_data.pickle and read from in_data.pickle
+                        # must save/read all speciated concs to avoid accumulating errors with nchem_only>1?
     if summations == True:
         sums = correct_summations(sums,species) # allow use of MCM subsets with INCHEM chemistry
         summations_dict = summations_compile(sums)
