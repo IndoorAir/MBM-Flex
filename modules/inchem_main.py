@@ -54,7 +54,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     from threadpoolctl import threadpool_limits
     import importlib.util
     import pandas as pd
-    import os
+    #import os   # (not used)
     import datetime
     import math
     import time as timing
