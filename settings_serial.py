@@ -32,6 +32,8 @@ import datetime
 from math import ceil
 from pandas import read_csv
 
+from modules.mr_transport import cross_ventilation_path, set_wind_flows, set_exchange_flows, calc_transport
+
 # =============================================================================================== #
 # Basic model settings
 
@@ -39,13 +41,13 @@ from pandas import read_csv
 # full : the complete MCM (5833 species, 17224 reactions)
 # subset : a subset of the MCM (2575 species, 7778 reactions)
 # reduced : the RCS mechanism (51 species, 137 reactions)
-mechanism = 'subset'
+mechanism = 'reduced'
 
-particles = True   # set to True if particles are included
+particles = False   # set to True if particles are included
                     # NB: the chemical mechanism must include at least one of
                     # a-pinene, b-pinene, limonene
 
-INCHEM_additional = True   # set to True to include the additional INCHEM mechanism
+INCHEM_additional = False   # set to True to include the additional INCHEM mechanism
 
 custom = False   # Custom reactions that are not in the MCM or in the INCHEM mechanism
                  # The format of this file is described in `custom_input.txt`
@@ -61,9 +63,12 @@ date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 
 lat = 45.4   # Latitude of simulation location
 
+faspect = 60   # Angle of the front side of the building (in deg N)
+               # 0 if building is facing N, 90 if building is facing E, etc...
+
 pressure_Pa = 101325   # atmospheric pressure is constant and is the same in all rooms
 
-# human body surface/volume ratios
+# human body surface/volume ratios (in cm^-1)
 bsa_bvi_adult = 0.28   # assume BSA = 1.8 m2 and BVI = 65 L
 bsa_bvi_child = 0.4    # assume BSA = 1.1 m2 and BVI = 28 L
 
@@ -79,7 +84,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 tchem_only = 300     # NB: must be < 3600 seconds
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 3600*24     # NB: MUST BE A MULTIPLE OF tchem_only !!
+total_seconds_to_integrate = 900     # NB: MUST BE A MULTIPLE OF tchem_only !!
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
@@ -100,7 +105,8 @@ seconds_to_integrate = tchem_only
 # Output settings
 
 # An output pickle file is automatically saved so that all data can be recovered
-# at a later date for analysis. Applies to folder name and settings file copy name.
+# at a later date for analysis. The custom name of the model run applies to the
+# output folder name and settings file copy name.
 custom_name = 'TestSerial'
 
 # INCHEM-Py calculates the rate constant for each reaction at every time point
@@ -146,7 +152,29 @@ print('Chemical mechanism set to:',filename)
 # directory with room configuration files
 config_dir = 'config_rooms/'
 
-# INPUT DATA: physical characteristics of the rooms
+# Information on the building, includes:
+# - rooms on each floor, identified by a number
+# - openings (number, size, height from the gound) between each room and between each room and outside
+tcon_building = read_csv(config_dir+'mr_tcon_building.csv')
+
+# Find the shortest sequence of rooms connecting left-right (lr_sequence) and
+# front-back (fb_sequence) sides of the building. These sequences are used to
+# calculate the advection flow, as a function of ambient wind data.
+lr_sequence = cross_ventilation_path(tcon_building,'LR')
+fb_sequence = cross_ventilation_path(tcon_building,'FB')
+
+# Information on ambient wind (used for the calculation of advection and exchange flows)
+# - wind speed (in m/s)
+# - wind direction (in deg N)
+tvar_params = read_csv(config_dir+'mr_tvar_wind_params.csv')
+
+secsfrommn = tvar_params['seconds_from_midnight'].tolist()
+mrwindspd = tvar_params['wind_speed'].tolist()
+mrwinddir = tvar_params['wind_direction'].tolist()
+
+# --------------------------------------------------------------------------- #
+
+# INPUT DATA: physical characteristics of the building and of the rooms
 #
 # Room parameters that do not change with time: `mr_tcon_room_params.csv`
 # - number of rooms
@@ -195,8 +223,13 @@ for iroom in range(0,nroom):
     # Physical parameters of each room variable with time: `mr_tvar_room_params_*.csv`
     # - temperature (K)
     # - relative humidity (%)
-    # - outdoor/indoor change rate (s^-1)
+    # - outdoor/indoor exchange rate (s^-1)
     # - light switch (on/off)
+    #
+    # N.B.: in MBM-Flex the outdoor/indoor exchange rate (acrate) accounts only for
+    #       the "leakage" of the building (e.g. gaps around closed windows and doors).
+    #       The indoor/outdoor exchange via open apertures is calculated by the transport
+    #       module as a function of ...
     tvar_params = read_csv(config_dir+'mr_tvar_room_params_'+str(iroom+1)+'.csv')
 
     secsfrommn = tvar_params['seconds_from_midnight'].tolist()
@@ -265,19 +298,25 @@ for iroom in range(0,nroom):
 # transport module (`mr_transport.py`) and reinitialize the model,
 # then run again until end_of_total_integration
 for ichem_only in range (0,nchem_only): # loop over chemistry-only integration periods
-    #print('ichem_only=',ichem_only)
 
     """
     Transport between rooms
+
+    Accounted starting from the second chemistry-only step
     """
     if ichem_only > 0:
-        #(1) Add simple treatment of transport between rooms here
-        if (__name__ == "__main__") and (nroom >= 2):
-            from modules.mr_transport import calc_transport
-            calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol)
 
-        #(2) Update t0; adjust time of day to start simulation (seconds from midnight),
-        #    reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
+        # (1) Add simple treatment of transport between rooms here
+        if (__name__ == "__main__") and (nroom >= 2):
+            trans_params = set_wind_flows(faspect,nroom,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params])
+            trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+            calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
+            print('==> transport applied at iteration:', ichem_only)
+    else:
+        print('==> transport not applied at iteration:', ichem_only)
+
+        # (2) Update t0; adjust time of day to start simulation (seconds from midnight),
+        #     reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
         t0 = t0 + tchem_only
 
     # Determine time index for tvar_params, itvar_params
@@ -349,8 +388,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # TODO: add more comments to this section
         lotstr='['
         for ihour in range (0,24):
-            if (ihour==0 and all_mrlswitch[iroom][ihour]==1) or \
-               (ihour>0 and all_mrlswitch[iroom][ihour]==1 and all_mrlswitch[iroom][ihour-1]==0):
+            if (ihour==0 and all_mrlswitch[iroom][ihour]==1) or (ihour>0 and all_mrlswitch[iroom][ihour]==1 and all_mrlswitch[iroom][ihour-1]==0):
                 lotstr=lotstr+'['+str(ihour)+','
             if (ihour>0 and all_mrlswitch[iroom][ihour]==0 and all_mrlswitch[iroom][ihour-1]==1):
                 lotstr=lotstr+str(ihour)+'],'
