@@ -327,6 +327,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
     Accounted starting from the second chemistry-only step
     """
     if ichem_only > 0:
+
         # (1) Add simple treatment of transport between rooms here
         if (__name__ == "__main__") and (nroom >= 2):
             # convection flows
