@@ -23,7 +23,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-
 def surface_deposition(AV,H2O2_dep,O3_dep):
     '''
     Calculations of surface deposition rates, not all species have
