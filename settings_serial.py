@@ -480,7 +480,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                        'GLASS'    : surface_room * mrglass[iroom]/100,      # glass
                        'HUMAN'    : surface_people,   # humans, does not automatically include breath emissions
                        'OTHER'    : surface_room * mrglass[iroom]/100}      # other surfaces, no emissions
-        #print('surfaces_AV=',surfaces_AV)
+        #print('surface_area=',surface_area)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
