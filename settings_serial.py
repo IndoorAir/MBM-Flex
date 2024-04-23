@@ -80,9 +80,8 @@ ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant
                          # NB: the indoor temperature of each room is set in the
                          # corresponding `config_rooms/mr_tvar_room_params_*.csv` file.
 
-# human body surface/volume ratios (in cm^-1)
-bsa_bvi_adult = 0.28   # assume BSA = 1.8 m2 and BVI = 65 L
-bsa_bvi_child = 0.4    # assume BSA = 1.1 m2 and BVI = 28 L
+# Average body surface/volume ratio (in cm^-1) of an adult human
+bsa_bvi = 0.28
 
 # =============================================================================================== #
 # Integration settings and time control
@@ -433,7 +432,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #print('light_on_times=',light_on_times)
 
         """
-        Surface deposition
+        Surface deposition and breath emissions from humans
         """
         # The surface dictionary exists in surface_dictionary.py in the modules folder.
         # To change any surface deposition rates of individual species, or to add species
@@ -454,7 +453,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # AV is the surface to volume ratio (cm^-1)
         AV = (mrsurfa[iroom]/mrvol[iroom])/100 # Factor of 1/100 converts units from m^-1 to cm^-1
 
-        # deposition on different types of surface is used only if H2O2 and O3 deposition are active
+        # Deposition on different types of surface is used only if H2O2 and O3 deposition are active
         surfaces_AV = {             # (cm^-1)
                         'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
                         'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
@@ -468,14 +467,17 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                         'AVHUMAN'    : 0.0000          # humans
                         }
 
-        """
-        Breath emissions from humans
-        """
-        adults = all_mradults[iroom][itvar_params]    # Number of adults
-        children = all_mrchildren[iroom][itvar_params]   # Number of children (10 years old)
+        # Number of adults and children (10 years old) in the room
+        adults = all_mradults[iroom][itvar_params]
+        children = all_mrchildren[iroom][itvar_params]
 
-        # AV ratio for humans calculated using an average body surface area and volume
-        surfaces_AV['AVHUMAN'] = (adults * bsa_bvi_adult) + (children * bsa_bvi_child)
+        # AV ratio calculated using the average body surface/volume of an adult (`bsa_bvi`),
+        # and assuming that a child has a smaller surface area (61%) and volume (43%).
+        # For example:
+        # - adult : BSA = 1.8 m2 and BVI = 65 L
+        # - child :  BSA = 1.1 m2 and BVI = 28 L
+        surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
+        print('surfaces_AV=',surfaces_AV)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
