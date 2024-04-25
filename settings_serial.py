@@ -476,8 +476,9 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # For example:
         # - adult : BSA = 1.8 m2 and BVI = 65 L
         # - child :  BSA = 1.1 m2 and BVI = 28 L
-        surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
-        print('surfaces_AV=',surfaces_AV)
+        if (adults > 0 or children > 0):
+            surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
+        #print('surfaces_AV=',surfaces_AV)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
@@ -490,7 +491,6 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             # If initials_from_run is set to False then initial gas conditions must be available
             # in the file specified by initial_conditions_gas. Inclusion of particles is optional.
             initial_conditions_gas = 'initial_concentrations.txt'
-
 
             # initial gas concentrations can be taken from a previous run of the model.
             # Set initials_from_run to True if this is the case and move a previous out_data.pickle
