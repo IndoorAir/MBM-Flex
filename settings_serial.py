@@ -64,7 +64,7 @@ date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 
 lat = 45.4   # Latitude of simulation location
 
-faspect = 60   # Angle of the front side of the building (in deg N)
+faspect = 60   # Angle of the front side of the building (deg N)
                # 0 if building is facing N, 90 if building is facing E, etc...
 
 Cp_coeff = [0.3,-0.2] # Pressure coefficients of the building [upwind,downwind]
@@ -80,8 +80,9 @@ ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant
                          # NB: the indoor temperature of each room is set in the
                          # corresponding `config_rooms/mr_tvar_room_params_*.csv` file.
 
-# Average body surface/volume ratio (in cm^-1) of an adult human
-bsa_bvi = 0.28
+# Average body surface area of adults and children (m^2)
+bsa_adult = 1.8
+bsa_child = 1.1
 
 # =============================================================================================== #
 # Integration settings and time control
@@ -443,41 +444,42 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # Schemes for deposition of O3 and H2O2 are optionally provided. These schemes
         # provide calculated surface emissions proportional to O3 and H2O2 deposition
         # to different surfaces. The schemes can be turned off or on below.
-        # If either scheme is on then AV will be calculated as a sum of the AVs given
+        # If either scheme is on, then AV will be calculated as a sum of the AVs given
         # for the individual surfaces.
 
         # switch H2O2 and O3 deposition on/off
         H2O2_dep = True
         O3_dep = True
 
-        # AV is the surface to volume ratio (cm^-1)
-        AV = (mrsurfa[iroom]/mrvol[iroom])/100 # Factor of 1/100 converts units from m^-1 to cm^-1
-
-        # Deposition on different types of surface is used only if H2O2 and O3 deposition are active
-        surfaces_AV = {             # (cm^-1)
-                        'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
-                        'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
-                        'AVWOOD'     : AV*mrwood[iroom]/100,      # wood
-                        'AVMETAL'    : AV*mrmetal[iroom]/100,     # metal
-                        'AVCONCRETE' : AV*mrconcrete[iroom]/100,  # concrete
-                        'AVPAPER'    : AV*mrpaper[iroom]/100,     # paper
-                        'AVLINO'     : AV*mrlino[iroom]/100,      # linoleum
-                        'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
-                        'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
-                        'AVHUMAN'    : 0.0000          # humans
-                        }
-
         # Number of adults and children (10 years old) in the room
         adults = all_mradults[iroom][itvar_params]
         children = all_mrchildren[iroom][itvar_params]
+        
+        # Surface areas (m^2) of the empty room and of the people in the room, if present
+        surface_room = mrsurfa[iroom]
+        surface_people = (adults*bsa_adult) + (children*bsa_child)
+        
+        # Effective volume (m^3) of the room, accounting for the presence of people
+        volume_room = mrvol[iroom] # TODO: remove volume of people from total volume of room
 
-        # AV ratio calculated using the average body surface/volume of an adult (`bsa_bvi`),
-        # and assuming that a child has a smaller surface area (61%) and volume (43%).
-        # For example:
-        # - adult : BSA = 1.8 m2 and BVI = 65 L
-        # - child :  BSA = 1.1 m2 and BVI = 28 L
-        if (adults > 0 or children > 0):
-            surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
+        # Surface to volume ratio of the room (cm^-1) with and without people
+        AV = ((surface_room + surface_people)/volume_room)/100  # Factor of 1/100 converts from m^-1 to cm^-1
+        AV_empty = (surface_room/volume_room)/100
+
+        # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches 
+        # (H2O2_dep, O3_dep) are active, otherwise AV is used
+        surfaces_AV = {             # (cm^-1)
+                       'AVSOFT'     : AV_empty * mrsoft[iroom]/100,       # soft furnishings
+                       'AVPAINT'    : AV_empty * mrpaint[iroom]/100,      # painted surfaces
+                       'AVWOOD'     : AV_empty * mrwood[iroom]/100,       # wood
+                       'AVMETAL'    : AV_empty * mrmetal[iroom]/100,      # metal
+                       'AVCONCRETE' : AV_empty * mrconcrete[iroom]/100,   # concrete
+                       'AVPAPER'    : AV_empty * mrpaper[iroom]/100,      # paper
+                       'AVLINO'     : AV_empty * mrlino[iroom]/100,       # linoleum
+                       'AVPLASTIC'  : AV_empty * mrplastic[iroom]/100,    # plastic
+                       'AVGLASS'    : AV_empty * mrglass[iroom]/100,      # glass
+                       'AVHUMAN'    : AV - AV_empty   # humans
+                       }
         #print('surfaces_AV=',surfaces_AV)
 
         """
