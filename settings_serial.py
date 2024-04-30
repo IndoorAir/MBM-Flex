@@ -454,6 +454,13 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # Number of adults and children (10 years old) in the room
         adults = all_mradults[iroom][itvar_params]
         children = all_mrchildren[iroom][itvar_params]
+        
+        # Surface areas (m^2) of the empty room and of the people in the room, if present
+        surface_room = mrsurfa[iroom]
+        surface_people = (adults*bsa_adult) + (children*bsa_child)
+        
+        # Effective volume (m^3) of the room, accounting for the presence of people
+        volume_room = mrvol[iroom] # TODO: remove volume of people from total volume of room
 
         # Surface areas (cm^2) of the empty room and of the people in the room, if present
         surface_room = mrsurfa[iroom]*1e4
