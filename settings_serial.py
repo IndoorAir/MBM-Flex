@@ -454,14 +454,40 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # Number of adults and children (10 years old) in the room
         adults = all_mradults[iroom][itvar_params]
         children = all_mrchildren[iroom][itvar_params]
+        
+        # Surface areas (m^2) of the empty room and of the people in the room, if present
+        surface_room = mrsurfa[iroom]
+        surface_people = (adults*bsa_adult) + (children*bsa_child)
+        
+        # Effective volume (m^3) of the room, accounting for the presence of people
+        volume_room = mrvol[iroom] # TODO: remove volume of people from total volume of room
 
         # AV ratio calculated using the average body surface/volume of an adult (`bsa_bvi`),
         # and assuming that a child has a smaller surface area (61%) and volume (43%).
         # For example:
         # - adult : BSA = 1.8 m2 and BVI = 65 L
         # - child :  BSA = 1.1 m2 and BVI = 28 L
-        if (adults > 0 or children > 0):
-            surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
+        #if (adults > 0 or children > 0):
+        #    surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
+
+        # Surface to volume ratio of the room (cm^-1) with and without people
+        AV = ((surface_room + surface_people)/volume_room)/100  # Factor of 1/100 converts from m^-1 to cm^-1
+        AV_empty = (surface_room/volume_room)/100
+
+        # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches 
+        # (H2O2_dep, O3_dep) are active, otherwise AV is used
+        surfaces_AV = {             # (cm^-1)
+                       'AVSOFT'     : AV_empty * mrsoft[iroom]/100,       # soft furnishings
+                       'AVPAINT'    : AV_empty * mrpaint[iroom]/100,      # painted surfaces
+                       'AVWOOD'     : AV_empty * mrwood[iroom]/100,       # wood
+                       'AVMETAL'    : AV_empty * mrmetal[iroom]/100,      # metal
+                       'AVCONCRETE' : AV_empty * mrconcrete[iroom]/100,   # concrete
+                       'AVPAPER'    : AV_empty * mrpaper[iroom]/100,      # paper
+                       'AVLINO'     : AV_empty * mrlino[iroom]/100,       # linoleum
+                       'AVPLASTIC'  : AV_empty * mrplastic[iroom]/100,    # plastic
+                       'AVGLASS'    : AV_empty * mrglass[iroom]/100,      # glass
+                       'AVHUMAN'    : AV - AV_empty   # humans
+                       }
         print('surfaces_AV=',surfaces_AV)
 
         """
