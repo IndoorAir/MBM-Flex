@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ![INCHEM-Py](INCHEMPY_logo.png "INCHEM-Py logo")
 
 
@@ -8,15 +7,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5036374.svg)](https://doi.org/10.5281/zenodo.5036374)
 
 
-=======
-<<<<<<<< HEAD:README.md
-# MBM-Flex
-
-MBM-Flex is based on INCHEM-Py
-========
-![INCHEM-Py](INCHEMPY_logo.png "INCHEM-Py logo")
-
->>>>>>> 0a40630 (Documentation directory)
 # INCHEM-Py
 
 The INdoor CHEMical model in Python (INCHEM-Py) is an open source box model that creates and solves a system of coupled Ordinary Differential Equations (ODEs) to provide predicted concentrations of indoor air pollutants through time. It is a refactor of the indoor detailed chemical model originally developed by [Carslaw (2007)](https://doi.org/10.1016/j.atmosenv.2006.09.038) with improvements in form, function, and accessibility. 
@@ -98,7 +88,3 @@ INCHEM-Py is free software, but since it is a scientific code we also ask that y
 * Since you are benefiting from work on INCHEM-Py, we ask that you submit any improvements you make to the code to us by submitting a pull request. Issues should be reported using the issue tracker.
 * If you use INCHEM-Py results in a paper or professional publication, we ask that it includes an appropriate reference. It is understood that in most cases if one or more of the INCHEM-Py team are involved in preparing results then they should appear as co-authors.
 * The INCHEM-Py logo is included with the model and may optionally be used in any oral or poster presentations.
-<<<<<<< HEAD
-=======
->>>>>>>> 0a40630 (Documentation directory):docs/INCHEMPY_README.md
->>>>>>> 0a40630 (Documentation directory)
