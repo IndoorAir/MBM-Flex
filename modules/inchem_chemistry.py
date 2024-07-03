@@ -110,6 +110,7 @@ INCHEM_sums = [["OLEFIN","BUT1ENE+CBUT2ENE+TBUT2ENE+MEPROPENE+PENT1ENE+CPENT2ENE
                 +TMBNO3+C623NO3+C822NO3+C817NO3+C731NO3+C729NO3+LMKBNO3+\
                 LIMALNO3+C826NO3+C923NO3+C622NO3+C624NO3+C730NO3+C728NO3+C732NO3\
                 +C517NO3+C823NO3+C626NO3+DHMOLNO3"]]
+                # TODO: add Peroxy radicals summations here
 
 INCHEM_rates=[
 #KMT19:clo+clo=cloocl*,
@@ -534,7 +535,7 @@ INCHEM_reactions=[
 ["KROPRIM*O2","CH3CHOHO=HO2+CH3CO2H"],
 ["1.45e-11","ETH2OH+OH=CH3CO2H+HO2"],
 
-# CL reaction scheme to be incorporated to the MCM framework          
+# CL reaction scheme to be incorporated to the MCM framework    
 # (https://gmd.copernicus.org/articles/8/3151/2015/, Wong et al 2017)      
 # Code compiled by Drs Likun Xue and Sam Saunders                     
 
