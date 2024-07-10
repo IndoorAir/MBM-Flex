@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-User set variable input file for INCHEM-Py. 
+User set variable input file for INCHEM-Py.
 A detailed description of this file can be found within the user manual.
 
-Copyright (C) 2019-2021 
+Copyright (C) 2019-2021
 David Shaw : david.shaw@york.ac.uk
 Nicola Carslaw : nicola.carslaw@york.ac.uk
 
@@ -25,22 +25,20 @@ You should have received a copy of the GNU General Public License
 along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
-
-
-
-# JGL: Added further module imports
-import csv
-from pandas import *
+# Import modules
+import os
 import sys
-from math import ceil
-import os
 import datetime
-import shutil
+from math import ceil
+from pandas import read_csv
+#import csv
+#import shutil
 #from numba import njit, prange
-import os
 
 from multiprocessing import Pool # Parallel
+
+
+# =============================================================================================== #
 
 
 #print('Number of CPUs in the system: {}'.format(os.cpu_count()))
@@ -48,7 +46,11 @@ from multiprocessing import Pool # Parallel
 # Necessary to add cwd to path when script run by SLURM, e.g., on BlueBEAR (since it executes a copy)
 #sys.path.append(os.getcwd())
 
+# --------------------------------------------------------------------------- #
 def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_type,glass,AV,light_on_times,timed_inputs,custom_name,filename,particles,INCHEM_additional,custom,timed_emissions,dt,t0,seconds_to_integrate,output_graph,output_species):
+    '''
+    '''
+
     print('Inside parallel_room_integrations, iroom=',iroom,'ichem_only=',ichem_only)
 
     # JGL: Determine temp, rel_humidity and M from tvar_params data
@@ -59,7 +61,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
 #    M = (all_mrpres[iroom][itvar_params]/(8.3144626*temp))*(6.0221408e23/1e6) # number density of air (molecule cm^-3)
 #    #print('M=',M)
 #    AER = all_mraer[iroom][itvar_params] # Air exchange rate in [fraction of room] per second
-#    #print('AER=',AER)   
+#    #print('AER=',AER)
 #    light_type = mrlightt[iroom].strip()
 #    #print('light_type=',light_type)
 #    glass = mrglasst[iroom].strip()
@@ -82,7 +84,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
 #    if end_of_total_integration>86400:
 #        lotstr=lotstr.strip("[]")
 #        nrep=ceil(end_of_total_integration/86400)
-#        lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'       
+#        lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'
 #    #print('lotstr=',lotstr)
 #    if lotstr=="[]":
 #        light_type="off"
@@ -130,7 +132,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     lat = 45.4         # Latitude of simulation location
     #light_type="Incand"  # Can be "Incand", "Halogen", "LED", "CFL", "UFT", "CFT", "FT", or "off"
     #"off" sets all light attenuation factors to 0 and therefore no indoor lighting is present.
-    #light_on_times=[[7,19],[31,43],[55,67],[79,91]] 
+    #light_on_times=[[7,19],[31,43],[55,67],[79,91]]
     #[[light on time (hours), light off time (hours)],[light on time (hours),light_off_time (hours)],...]
     #glass="glass_C" # Can be "glass_C", "low_emissivity", "low_emissivity_film", or "no_sunlight".
     #"no_sunlight" sets all window attenuation factors to 0 and therefore no light enters from outdoors.
@@ -152,10 +154,10 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     #Initial concentrations in molecules/cm^3 saved in a text file
     #"""
     #initials_from_run = False
-    ## initial gas concentrations can be taken from a previous run of the model. 
+    ## initial gas concentrations can be taken from a previous run of the model.
     ## Set initials_from_run to True if this is the case and move a previous out_data.pickle
     ## to the main folder and rename to in_data.pickle. The code will then take this
-    ## file and extract the concentrations from the time point closest to t0 as 
+    ## file and extract the concentrations from the time point closest to t0 as
     ## initial conditions.
 
     ## in_data.pickle must contain all of the species required, including particles if used.
@@ -174,7 +176,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     ## and the dictionary called timed_inputs (below) needs to be populated
 
     # When using timed emissions it's suggested that the start time and end times are divisible by dt
-    # and that (start time - end time) is larger then 2*dt to avoid the integrator skipping any 
+    # and that (start time - end time) is larger then 2*dt to avoid the integrator skipping any
     # emissions over small periods of time.
 
     ## the dictionary should be populated as
@@ -182,7 +184,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     ##                 species2:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]]}
     #timed_inputs = {"LIMONENE":[[36720,37320,5e8],[37600,38000,5e8]],
     #                "APINENE":[[36800,37320,5e8]]}
-    
+
 #    timed_inputs = all_mremis [iroom]
 #    print('timed_inputs=', timed_inputs)
 
@@ -191,7 +193,7 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     #"""
     #Integration
     #"""
-    #dt = 150                        # Time between outputs (s), simulation may fail if this is too large 
+    #dt = 150                        # Time between outputs (s), simulation may fail if this is too large
                                      # also used as max_step for the scipy.integrate.ode integrator
     #t0 = 0                          # time of day, in seconds from midnight, to start the simulation
     #seconds_to_integrate = 86400    # how long to run the model in seconds (86400*3 will run 3 days)
@@ -201,33 +203,33 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     Run the simulation
     """
 
-    
+
     """
     Initial concentrations in molecules/cm^3 saved in a text file #JGL: Moved and updated settings re init concs here
     """
 
     initial_conditions_gas = 'initial_concentrations.txt'
-    
+
     if ichem_only == 0:
         initials_from_run = False #JGL: for first chem-only integration, init concs must be taken from initial_conditions_gas; for now, same file/same concs for all rooms
-        
+
         # If initials_from_run is set to False then initial gas conditions must be available
         # in the file specified by initial_conditions_gas, the inclusion of particles is optional.
         #initial_conditions_gas = 'initial_concentrations.txt'
-    
-        
-        # initial gas concentrations can be taken from a previous run of the model. 
+
+
+        # initial gas concentrations can be taken from a previous run of the model.
         # Set initials_from_run to True if this is the case and move a previous out_data.pickle
         # to the main folder and rename to in_data.pickle. The code will then take this
-        # file and extract the concentrations from the time point closest to t0 as 
+        # file and extract the concentrations from the time point closest to t0 as
         # initial conditions.
 
         # in_data.pickle must contain all of the species required, including particles if used.
-    
+
     else:
         initials_from_run = True #JGL: for all but the first chem-only integration, init concs taken from previous room-specific output
         #shutil.copyfile('%s/%s/%s' % (path,output_folder,'out_data.pickle'), '%s/%s' % (path,'in_data_c'+str(ichem_only)+'_r'+str(iroom+1)+'.pickle'))
-        
+
     #JGL: Moved assignment of path and output_folder to settings.py and passed these to inchem_main.py
     '''
     setting the output folder in current working directory
@@ -245,20 +247,24 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     #if __name__ == "__main__":
     from modules.inchem_main import run_inchem
     run_inchem(filename, particles, INCHEM_additional, custom, temp, rel_humidity,
-                    M, const_dict, AER, diurnal, city, date, lat, light_type, 
+                    M, const_dict, AER, diurnal, city, date, lat, light_type,
                     light_on_times, glass, AV, initials_from_run,
                     initial_conditions_gas, timed_emissions, timed_inputs, dt, t0, iroom, ichem_only, path, output_folder, #JGL added iroom, ichem_only, path and output_folder
                     seconds_to_integrate, custom_name, output_graph, output_species)
-        
+
     return
 
-
+# --------------------------------------------------------------------------- #
 def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpres,all_mraer,mrlightt,mrglasst,itvar_params,mrvol,mrsurfa,all_mrlswitch,all_mremis,custom_name,filename,particles,INCHEM_additional,custom,dt,t0,seconds_to_integrate,output_graph,output_species): # Parallel
+    '''
+    '''
+
     print('Inside run_parallel_room_integrations, nroom=',nroom,' and ichem_only=',ichem_only)
+
     room_inputs=[[0 for x in range(22)] for y in range(nroom)]
     for iroom in range(nroom):
         #print('iroom=',iroom)
- 
+
         light_type=mrlightt[iroom].strip()
         lotstr='['
         for ihour in range (0,24):
@@ -273,7 +279,7 @@ def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpr
         if end_of_total_integration>86400:
             lotstr=lotstr.strip("[]")
             nrep=ceil(end_of_total_integration/86400)
-            lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'       
+            lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'
         #print('lotstr=',lotstr)
         if lotstr=="[]":
             light_type="off"
@@ -281,7 +287,7 @@ def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpr
         if light_type!="off":
             light_on_times=eval(lotstr)
             #print('light_on_times=',light_on_times)
-        
+
         room_inputs[iroom][0] = iroom
         room_inputs[iroom][1] = ichem_only
         room_inputs[iroom][2] = all_mrtemp[iroom][itvar_params] # temperature in Kelvin
@@ -299,39 +305,39 @@ def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpr
         room_inputs[iroom][14] = INCHEM_additional
         room_inputs[iroom][15] = custom
         room_inputs[iroom][16] = timed_emissions
-        room_inputs[iroom][17] = dt 
+        room_inputs[iroom][17] = dt
         room_inputs[iroom][18] = t0
         room_inputs[iroom][19] = seconds_to_integrate
         room_inputs[iroom][20] = output_graph
         room_inputs[iroom][21] = output_species
-        
-        
+
+
         print('room_inputs=',room_inputs[iroom])
-        
-        
+
+
     print('Inside run_parallel_room_integrations, room_inputs=',room_inputs)
     with Pool() as pool:
         pool.starmap(parallel_room_integrations,room_inputs)
         #pool.join()
 
 
-
+# =============================================================================================== #
 
 
 if __name__ == '__main__':
 
     filename = 'mcm_v331.fac' # facsimile format input filename
-    
+
     particles = True # Are we including particles. Boolean
-    
+
     INCHEM_additional = True #Set to True if additional reactions from the INCHEM are being used
     #that do not appear in the MCM download
-    
+
     custom = False # Custom reactions that are not in the MCM included?
     # Format of this file is in an included custom file called custom_input.txt.
-    
-    
-    # JGL: Moved settings re emissions to here     
+
+
+    # JGL: Moved settings re emissions to here
     """
     Timed concentrations
     """
@@ -342,10 +348,10 @@ if __name__ == '__main__':
     #                 species2:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]]}
     # The relevant parameters are read in from from-specific csv files, mr_room_emis_params_[iroom+1]
     nemis_species = 2 # is the number of species for which emission parameters are provided in said files
-    
-    
+
+
     nroom = 3 # JGL: Number of rooms (each room treated as one box); NB room index, iroom will start from 0
-    
+
     #all_secsfrommn = []
     all_mrtemp = []
     all_mrrh = []
@@ -353,13 +359,13 @@ if __name__ == '__main__':
     all_mraer = []
     all_mrls = []
     all_mrlswitch = []
-    
+
     all_mremis = {}
-    
+
     for iroom in range(0, nroom):
-        
+
         tvar_params = read_csv("mr_tvar_room_params_"+str(iroom+1)+".csv")
-    
+
         secsfrommn = tvar_params['seconds_from_midnight'].tolist()
         mrtemp = tvar_params['temp_in_kelvin'].tolist()
         mrrh = tvar_params['rh_in_percent'].tolist()
@@ -367,13 +373,13 @@ if __name__ == '__main__':
         mraer = tvar_params['aer_in_per_second'].tolist()
         mrlswitch = tvar_params['light_switch'].tolist()
         #print('mrtemp=',mrtemp)
-        
+
         all_mrtemp.append(mrtemp)
         all_mrrh.append(mrrh)
         all_mrpres.append(mrpres)
         all_mraer.append(mraer)
         all_mrlswitch.append(mrlswitch)
-        
+
         mremis_params = read_csv("mr_room_emis_params_"+str(iroom+1)+".csv")
         mremis_species = mremis_params['species'].tolist()
         mremis_tstart1 = mremis_params['tstart1_in_seconds'].tolist()
@@ -394,7 +400,7 @@ if __name__ == '__main__':
         mremis_tstart6 = mremis_params['tstart6_in_seconds'].tolist()
         mremis_tend6 = mremis_params['tend6_in_seconds'].tolist()
         mremis_emis6 = mremis_params['emis6_in_molcm-3sec-1'].tolist()
-        
+
         mremis = {}
         for iemis_species in range(0, nemis_species):
             mremis [mremis_species[iemis_species]] = [mremis_tstart1[iemis_species],mremis_tend1[iemis_species],mremis_emis1[iemis_species]],\
@@ -403,29 +409,29 @@ if __name__ == '__main__':
              [mremis_tstart4[iemis_species],mremis_tend4[iemis_species],mremis_emis4[iemis_species]],\
              [mremis_tstart5[iemis_species],mremis_tend5[iemis_species],mremis_emis5[iemis_species]],\
              [mremis_tstart6[iemis_species],mremis_tend6[iemis_species],mremis_emis6[iemis_species]]
-        all_mremis [iroom] = mremis        
-        #print('all_mremis(',iroom,')=',all_mremis[iroom])   
-        
-    
+        all_mremis [iroom] = mremis
+        #print('all_mremis(',iroom,')=',all_mremis[iroom])
+
+
     tcon_params = read_csv("mr_tcon_room_params.csv")
-    
+
     mrvol = tcon_params['volume_in_m3'].tolist()
     mrsurfa = tcon_params['surf_area_in_m2'].tolist()
     mrlightt = tcon_params['light_type'].tolist()
     mrglasst = tcon_params['glass_type'].tolist()
-    
-    
+
+
     # JGL: Moved assignment of dt, t0 and seconds_to_integrate to here
     """
     Integration
     """
-    dt = 150                        # Time between outputs (s), simulation may fail if this is too large 
+    dt = 150                        # Time between outputs (s), simulation may fail if this is too large
     t0 = 0                          # time of day, in seconds from midnight, to start the simulation
     total_seconds_to_integrate = 4800    # how long to run the model in seconds (86400*3 will run 3 days) #JGL: renamed total_[seconds_to_integrate]
-    
+
     end_of_total_integration = t0+total_seconds_to_integrate
-    
-    
+
+
     tchem_only = 600 # JGL: Set length of chemistry-only integrations (between simple treatments of transport; assumed separable); NB MUST BE < 3600 SECONDS
     nchem_only = round (total_seconds_to_integrate/tchem_only) # JGL: Calculate nearest whole number of chemistry-only integrations approximating seconds_to_integrate
     if nchem_only == 0:
@@ -435,40 +441,40 @@ if __name__ == '__main__':
     print('nchem_only therefore set to',nchem_only)
     seconds_to_integrate = tchem_only
     print('seconds_to_integrate set to',seconds_to_integrate)
-    
-    
+
+
     """
     Output
     """
     # An output pickle file is automatically saved so that all data can be recovered
-    # at a later date for analysis. 
+    # at a later date for analysis.
     custom_name = 'Test_20230602_Parallel'
     print('custom_name=',custom_name)
-    
-    # This function purely outputs a graph to the 
-    # output folder of a list of selected species and a CSV of concentrations. 
+
+    # This function purely outputs a graph to the
+    # output folder of a list of selected species and a CSV of concentrations.
     # If the species do not exist in the run then a key error will cause it to fail
     output_graph = True #Boolean
     output_species = ['O3',"O3OUT","tsp"]
-    
-    
-    
-        
-        
-    
+
+
+
+
+
+
     for ichem_only in range (0,nchem_only): #JGL: Loop over chemistry-only integration periods
         print('ichem_only=',ichem_only)
-        
-        if ichem_only>0:     
+
+        if ichem_only>0:
             #(1) ADD SIMPLE TREATMENT OF TRANSPORT HERE
             if (__name__ == "__main__") and (nroom >=2):
                 from modules.mr_transport import calc_transport
                 calc_transport(custom_name,ichem_only,tchem_only,nroom,mrvol)
-                
+
             #(2) Update t0; adjust time of day to start simulation (seconds from midnight), reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
             t0 = t0 + tchem_only
-        
-        #JGL: Determine time index for tvar_params, itvar_params: NB ASSUMES TCHEM_ONLY < 3600 SECONDS (TIME RESOLUTION OF TVAR_PARAMS DATA) 
+
+        #JGL: Determine time index for tvar_params, itvar_params: NB ASSUMES TCHEM_ONLY < 3600 SECONDS (TIME RESOLUTION OF TVAR_PARAMS DATA)
         end_of_tchem_only = t0 + tchem_only
         t0_corrected = t0-((ceil(t0/86400)-1)*86400)
         end_of_tchem_only_corrected = end_of_tchem_only-((ceil(t0/86400)-1)*86400)
@@ -480,9 +486,9 @@ if __name__ == '__main__':
                 mid_of_tchem_only = mid_of_tchem_only + 86400
         itvar_params = ceil(mid_of_tchem_only/3600)-1
         #print('t0=',t0)
-        #print('end_of_tchem_only=',end_of_tchem_only) 
-        #print('mid_of_tchem_only=',mid_of_tchem_only) 
-        #print('itvar_params=',itvar_params)       
-                
-    
+        #print('end_of_tchem_only=',end_of_tchem_only)
+        #print('mid_of_tchem_only=',mid_of_tchem_only)
+        #print('itvar_params=',itvar_params)
+
+
         run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpres,all_mraer,mrlightt,mrglasst,itvar_params,mrvol,mrsurfa,all_mrlswitch,all_mremis,custom_name,filename,particles,INCHEM_additional,custom,dt,t0,seconds_to_integrate,output_graph,output_species)
