@@ -9,7 +9,7 @@ import pandas as pd
 from math import cos
 
 
-def connect_room_sequence(sequence_old, info_room):
+def connecting_room_sequence(sequence_old, info_room):
     '''
     Given a list of room sequences, this function creates a new list of room
     sequences which include the number of each room that connects to
@@ -133,7 +133,7 @@ def cross_ventilation_path(info_building,ventil_dir):
                     #print('now doing:', tmp_sequence[i])
                     info_room = info_floor.loc[info_building['rorig'] == tmp_sequence[i][-1]]
 
-                    seq1 = connect_room_sequence(tmp_sequence[i], info_room)
+                    seq1 = connecting_room_sequence(tmp_sequence[i], info_room)
                     seq2 = seq2 + seq1
 
                 # find the sequence which contains a room with an opening on the right side of the building
@@ -191,6 +191,11 @@ def wind_components(faspect,winddir,windspd):
 
     return windspd_lr,windspd_fb
 
+
+def flow_advection():
+    '''
+    '''
+    print("ok")
 
 def set_wind_flows(faspect,nroom,lr_sequence,fb_sequence,winddir,windspd):
     '''
@@ -511,7 +516,7 @@ def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol
                     # Increase number of molecules of each species in room of DESTINATION after transport
                     # to account for inbound flux.
                     # Fluxes in `trans_params` are specified in m3/s and the time between calls to
-                    # the calc_trans() function, i.e. `tchem_only`, is specified in s.
+                    # the calc_transport() function, i.e. `tchem_only`, is specified in s.
                     data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
 
                     #print('|------->', iroom_trans_orig, iroom_trans_dest, '>>>>>>>>>>', trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)])
