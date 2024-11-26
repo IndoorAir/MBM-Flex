@@ -32,15 +32,16 @@ import datetime
 from math import ceil
 from pandas import read_csv
 
-from modules.mr_transport import cross_ventilation_path, set_wind_flows, set_exchange_flows, calc_transport
+from modules.mr_transport import cross_ventilation_path, set_advection_flows, set_exchange_flows, calc_transport
 
 # =============================================================================================== #
 # Basic model settings
 
 # Choose the chemical mechanism
-# full : the complete MCM (5833 species, 17224 reactions)
-# subset : a subset of the MCM (2575 species, 7778 reactions)
+# full    : the complete MCM (5833 species, 17224 reactions)
+# subset  : a subset of the MCM (2575 species, 7778 reactions)
 # reduced : the RCS mechanism (51 species, 137 reactions)
+# minimal : the ESCS mechanism (10 species, 10 reactions)
 mechanism = 'reduced'
 
 particles = False   # set to True if particles are included
@@ -66,7 +67,13 @@ lat = 45.4   # Latitude of simulation location
 faspect = 60   # Angle of the front side of the building (in deg N)
                # 0 if building is facing N, 90 if building is facing E, etc...
 
-pressure_Pa = 101325   # atmospheric pressure is constant and is the same in all rooms
+Cp_coeff = [0.3,-0.2] # Pressure coefficients of the building [upwind,downwind]
+                      # TODO: add more options for different buildings
+
+ambient_press = 1013.0   # ambient pressure (mbar) is assumed to be constant, and is the same in all rooms
+ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant.
+                         # indoor temperature of each room is set in the corresponding
+                         # `config_rooms/mr_tvar_room_params_*.csv` file.
 
 # human body surface/volume ratios (in cm^-1)
 bsa_bvi_adult = 0.28   # assume BSA = 1.8 m2 and BVI = 65 L
@@ -81,7 +88,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 
 # Set duration of chemistry-only integrations between simple treatments of
 # transport (assumed separable)
-tchem_only = 300     # NB: must be < 3600 seconds
+tchem_only = 300     # NB: must be < 3600 seconds (1 hour)
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
 total_seconds_to_integrate = 900     # NB: MUST BE A MULTIPLE OF tchem_only !!
@@ -145,6 +152,9 @@ elif mechanism == 'subset':
 elif mechanism == 'reduced':
     filename = 'chem_mech/rcs_2023.fac'
     particles = False # ensure particles are not active with the 'reduced' mechanism
+elif mechanism == 'minimal':
+    filename = 'chem_mech/escs_v1.fac'
+    particles = False # ensure particles are not active with the 'minimal' mechanism
 else:
     sys.exit('! ERROR: please provide a valid mechanism (full, subset, reduced) !')
 print('Chemical mechanism set to:',filename)
@@ -162,6 +172,8 @@ tcon_building = read_csv(config_dir+'mr_tcon_building.csv')
 # calculate the advection flow, as a function of ambient wind data.
 lr_sequence = cross_ventilation_path(tcon_building,'LR')
 fb_sequence = cross_ventilation_path(tcon_building,'FB')
+#print('lr_sequence:',lr_sequence)
+#print('fb_sequence:',fb_sequence)
 
 # Information on ambient wind (used for the calculation of advection and exchange flows)
 # - wind speed (in m/s)
@@ -171,6 +183,11 @@ tvar_params = read_csv(config_dir+'mr_tvar_wind_params.csv')
 secsfrommn = tvar_params['seconds_from_midnight'].tolist()
 mrwindspd = tvar_params['wind_speed'].tolist()
 mrwinddir = tvar_params['wind_direction'].tolist()
+#print('mrwindspd:',mrwindspd)
+#print('mrwinddir:',mrwinddir)
+
+# ambient air density (assuming dry air), in kg/m3
+rho = (100*ambient_press) / (287.050 * ambient_temp)
 
 # --------------------------------------------------------------------------- #
 
@@ -249,6 +266,7 @@ for iroom in range(0,nroom):
     all_mrrh.append(mrrh)
     all_mracrate.append(mracrlist)
     all_mrlswitch.append(mrlswitch)
+    #print('all_mrtemp=',all_mrtemp)
     #print('all_mracrate=',all_mracrate)
 
     # People in each room variable with time: `mr_tvar_expos_params_*.csv`
@@ -305,15 +323,14 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
     Accounted starting from the second chemistry-only step
     """
     if ichem_only > 0:
-
         # (1) Add simple treatment of transport between rooms here
         if (__name__ == "__main__") and (nroom >= 2):
-            trans_params = set_wind_flows(faspect,nroom,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params])
+            trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
             trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
             calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
             print('==> transport applied at iteration:', ichem_only)
-    else:
-        print('==> transport not applied at iteration:', ichem_only)
+        else:
+            print('==> transport not applied at iteration:', ichem_only)
 
         # (2) Update t0; adjust time of day to start simulation (seconds from midnight),
         #     reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
@@ -358,8 +375,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #print('rel_humidity=',rel_humidity)
 
         mrt = all_mrtemp[iroom][itvar_params][1]
-        M = (pressure_Pa/(8.3144626*mrt))*(6.0221408e23/1e6) # air number density (molecule cm^-3)
-        #print('M=',M)
+        M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
+        #print('mrt=',mrt,'M=',M)
 
         # Place any species you wish to remain constant in the below dictionary. Follow the format.
         const_dict = {
@@ -432,17 +449,17 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
 
         # deposition on different types of surface is used only if H2O2 and O3 deposition are active
         surfaces_AV = {             # (cm^-1)
-                       'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
-                       'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
-                       'AVWOOD'     : AV*mrwood[iroom]/100,      # wood
-                       'AVMETAL'    : AV*mrmetal[iroom]/100,     # metal
-                       'AVCONCRETE' : AV*mrconcrete[iroom]/100,  # concrete
-                       'AVPAPER'    : AV*mrpaper[iroom]/100,     # paper
-                       'AVLINO'     : AV*mrlino[iroom]/100,      # linoleum
-                       'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
-                       'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
-                       'AVHUMAN'    : 0.0000          # humans
-                       }
+                        'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
+                        'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
+                        'AVWOOD'     : AV*mrwood[iroom]/100,      # wood
+                        'AVMETAL'    : AV*mrmetal[iroom]/100,     # metal
+                        'AVCONCRETE' : AV*mrconcrete[iroom]/100,  # concrete
+                        'AVPAPER'    : AV*mrpaper[iroom]/100,     # paper
+                        'AVLINO'     : AV*mrlino[iroom]/100,      # linoleum
+                        'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
+                        'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
+                        'AVHUMAN'    : 0.0000          # humans
+                        }
 
         """
         Breath emissions from humans
@@ -509,7 +526,6 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         Run the simulation
         """
-
         # print("----------------------------")
         # print(filename, particles, INCHEM_additional, custom, rel_humidity)
         # print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
@@ -523,10 +539,10 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         if __name__ == "__main__":
             from modules.inchem_main import run_inchem
             run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-                       M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-                       light_on_times, glass, AV, initials_from_run,
-                       initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-                       iroom, ichem_only, path, output_folder,
-                       seconds_to_integrate, custom_name, output_graph, output_species,
-                       reactions_output, H2O2_dep, O3_dep, adults, children,
-                       surfaces_AV, __file__, temperatures, spline)
+                        M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+                        light_on_times, glass, AV, initials_from_run,
+                        initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+                        iroom, ichem_only, path, output_folder,
+                        seconds_to_integrate, custom_name, output_graph, output_species,
+                        reactions_output, H2O2_dep, O3_dep, adults, children,
+                        surfaces_AV, __file__, temperatures, spline)

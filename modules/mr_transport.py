@@ -6,10 +6,10 @@ Functions for transport in MBM-Flex
 import pickle
 import re
 import pandas as pd
-from math import cos
+from math import cos, sqrt
 
 
-def connecting_room_sequence(sequence_old, info_room):
+def connecting_room_sequence(sequence_old,info_room):
     '''
     Given a list of room sequences, this function creates a new list of room
     sequences which include the number of each room that connects to
@@ -192,22 +192,50 @@ def wind_components(faspect,winddir,windspd):
     return windspd_lr,windspd_fb
 
 
-def flow_advection():
+def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     '''
-    '''
-    print("ok")
+    Calculate the advection flow through an opening (door or window), given its area
+    and the component of ambient wind passing through it.
+    
+    inputs:
+        io_windspd = component of the wind through the aperture (m/s)
+        oarea = cross section area of the aperture (m2)
+        Cd_coeff = discharge coefficient of the aperture
+        Cp_coeff = building pressure coefficients
+        air_density = air density of dry air (kg/m3)
 
-def set_wind_flows(faspect,nroom,lr_sequence,fb_sequence,winddir,windspd):
+    returns:
+        adv_flow = advection flow (m3/s)
+
     '''
-    Function to assign the advection fluxes across rooms, based on wind forcings.
+    # turbulent flow exponent
+    flow_m = 0.5
+
+    # pressure differential (in Pa)
+    P_upwind = 0.5 * air_density * (io_windspd**2) * Cp[0]
+    P_downwind = 0.5 * air_density * (io_windspd**2) * Cp[1]
+    delta_P = P_upwind - P_downwind
+
+    # advection flow (in m3/s)
+    adv_flow = Cd * oarea * sqrt(2/air_density) * (delta_P**flow_m)
+
+    return adv_flow
+
+
+def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequence,winddir,windspd,air_density):
+    '''
+    Function to assign the advection flows across rooms, based on wind forcings.
 
     inputs:
         faspect = angle of the building front
+        Cp_coeff = building pressure coefficients
         nroom = number of rooms in the building
+        info_building = dataframe describing the connections between rooms (indoor) and with outdoors
         lr_sequence = sequence of rooms connecting the left/right sides of the building
         fb_sequence = sequence of rooms connecting the front/back sides of the building
         winddir = wind direction
         windspd = wind speed
+        air_density = ambient air density
 
     returns:
         trans_params = array with the advection fluxes
@@ -215,42 +243,47 @@ def set_wind_flows(faspect,nroom,lr_sequence,fb_sequence,winddir,windspd):
     # left/right and front/back wind components
     lr_windspd,fb_windspd = wind_components(faspect,winddir,windspd)
 
-    # calculate advection fluxes with a placeholder function
-    lr_fluxadv = 999 #flux_advection(lr_sequence, lr_windspd)
-    fb_fluxadv = 999 #flux_advection(fb_sequence, fb_windspd)
-
     # empty data frame with all values set to zero
     trans_params = pd.DataFrame(index=range(nroom+1), columns=range(nroom+1))
-    trans_params.fillna(0, inplace=True)
+    trans_params.fillna(0.0, inplace=True)
 
     # add left/right advection flows to `trans_params` array
-    for i in range(len(lr_sequence)-1):
+    onum = len(lr_sequence)-1
+    for i in range(onum):
         iroom_trans_orig = lr_sequence[i]
         iroom_trans_dest = lr_sequence[i+1]
-
-        if trans_params.loc[iroom_trans_orig,iroom_trans_dest] == 0:
-            if lr_windspd > 0:
-                print('left-to-right advection flow:', iroom_trans_orig, '->', iroom_trans_dest, '=', lr_fluxadv)
-                trans_params.loc[iroom_trans_dest,iroom_trans_orig] = lr_fluxadv
-            elif lr_windspd < 0:
-                print('right-to-left advection flow:', iroom_trans_dest, '->', iroom_trans_orig, '=', lr_fluxadv)
-                trans_params.loc[iroom_trans_orig,iroom_trans_dest] = -lr_fluxadv # TODO: assuming right-left flux is negative
-            else:
-                print('\tleft/right cross ventilation does not occur')
+        # area of the aperture between rooms
+        info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
+                                  ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
+        area_room = info_room['oarea'].values[0]
+        # discharge coefficient of the aperture between rooms
+        Cd_coeff = 0.7/(1 + i/onum)
+        # calculate advection fluxes
+        if lr_windspd > 0:
+            trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+        elif lr_windspd < 0:
+            trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+        else:
+            print('\tleft/right cross ventilation does not occur')
 
     # add front/back advection flows to `trans_params` array
-    for j in range(len(fb_sequence)-1):
+    onum = len(fb_sequence)-1
+    for j in range(onum):
         iroom_trans_orig = fb_sequence[j]
         iroom_trans_dest = fb_sequence[j+1]
-        if trans_params.loc[iroom_trans_orig,iroom_trans_dest] == 0:
-            if fb_windspd > 0:
-                print('front-to-back advection flow:', iroom_trans_orig, '->', iroom_trans_dest, '=', fb_fluxadv)
-                trans_params.loc[iroom_trans_dest,iroom_trans_orig] = fb_fluxadv
-            elif fb_windspd < 0:
-                print('back-to-front advection flow:', iroom_trans_dest, '->', iroom_trans_orig, '=', fb_fluxadv)
-                trans_params.loc[iroom_trans_orig,iroom_trans_dest] = -fb_fluxadv # TODO: assuming back-front flux is negative
-            else:
-                print('\tfront/back cross ventilation does not occur')
+        # area of the aperture between rooms
+        info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
+                                  ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
+        area_room = info_room['oarea'].values[0]
+        # discharge coefficient of the aperture between rooms
+        Cd_coeff = 0.7/(1 + j/onum)
+        # calculate advection fluxes
+        if fb_windspd > 0:
+            trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+        elif fb_windspd < 0:
+            trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+        else:
+            print('\tfront/back cross ventilation does not occur')
 
     return trans_params
 
@@ -259,7 +292,7 @@ def set_exchange_flows(info_building,lr_sequence,fb_sequence,trans_params):
     '''
     Function to assign the exchange fluxes between rooms. The exchange fluxes are different
     depending on whether cross-ventilation (i.e. advection) occurs, which is assigned by
-    the set_wind_flows() function, and whether there is an opening to outdoors.
+    the set_advection_flows() function, and whether there is an opening to outdoors.
 
     inputs:
         info_building = dataframe describing the connections between rooms (indoor) and with outdoors
@@ -447,7 +480,7 @@ def get_trans_vars(all_var_list):
     return indoor_var_list, outdoor_var_list
 
 
-def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params):
+def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, mrvol, trans_params):
     '''
     Main function to apply transport (advection and exchange fluxes). This function is called
     following each integration (ichem_only) of duration `tchem_only` in the primary loop.
@@ -534,10 +567,10 @@ def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol
     # outdoor to indoor
     for iroom_trans_dest in range(0,nroom):
         if trans_params.loc[(iroom_trans_dest+1),0] != 0:
-            
+
             # Loop over all species for which there outdoor data, i.e. <speciesname>OUT
             for out_var in outdoor_var_list:
-                in_var = out_var[:-3] 
+                in_var = out_var[:-3]
                 if (in_var in indoor_var_list):
                     # Increase number of molecules of each species in room by the number of molecules coming from outdoors
                     data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_dest+1),0]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_dest][in_var])
@@ -545,10 +578,10 @@ def calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol
     # indoor to outdoor
     for iroom_trans_orig in range(0,nroom):
         if trans_params.loc[0,(iroom_trans_orig+1)] != 0:
-            
+
             # Loop over all species for which there outdoor data, i.e. <speciesname>OUT
             for out_var in outdoor_var_list:
-                in_var = out_var[:-3] 
+                in_var = out_var[:-3]
                 if (in_var in indoor_var_list):
                     # Decrease number of molecules of each species in room by the number of molecules going to outdoors
                     data_after_trans[iroom_trans_orig][in_var] = data_after_trans[iroom_trans_orig][in_var] - (trans_params.loc[0,(iroom_trans_orig+1)]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
