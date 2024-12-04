@@ -172,8 +172,7 @@ tcon_building = read_csv(config_dir+'mr_tcon_building.csv')
 # calculate the advection flow, as a function of ambient wind data.
 lr_sequence = cross_ventilation_path(tcon_building,'LR')
 fb_sequence = cross_ventilation_path(tcon_building,'FB')
-#print('lr_sequence:',lr_sequence)
-#print('fb_sequence:',fb_sequence)
+#print('lr_sequence:',lr_sequence,'\nfb_sequence:',fb_sequence)
 
 # Information on ambient wind (used for the calculation of advection and exchange flows)
 # - wind speed (in m/s)
@@ -191,7 +190,7 @@ rho = (100*ambient_press) / (287.050 * ambient_temp)
 
 # --------------------------------------------------------------------------- #
 
-# INPUT DATA: physical characteristics of the building and of the rooms
+# READ INPUT DATA: physical characteristics of the building and of the rooms
 #
 # Room parameters that do not change with time: `mr_tcon_room_params.csv`
 # - number of rooms
@@ -221,7 +220,7 @@ mrglass = tcon_params['percent_glass'].tolist()
 
 # --------------------------------------------------------------------------- #
 
-# INPUT DATA: physical and chemical variables of the rooms
+# READ INPUT DATA: physical and chemical variables of the rooms
 #
 # Room parameters that change with time and emissions of chemical species
 all_mrtemp = []
@@ -310,7 +309,7 @@ for iroom in range(0,nroom):
     else:
         all_timemis.append(True)
 
-# --------------------------------------------------------------------------- #
+# =========================================================================== #
 
 # PRIMARY LOOP: run for the duration of tchem_only, then execute the
 # transport module (`mr_transport.py`) and reinitialize the model,
@@ -325,8 +324,10 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
     if ichem_only > 0:
         # (1) Add simple treatment of transport between rooms here
         if (__name__ == "__main__") and (nroom >= 2):
+            # convection flows
             trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
-            trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+            # exchange flows
+            #trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
             calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
             print('==> transport applied at iteration:', ichem_only)
         else:

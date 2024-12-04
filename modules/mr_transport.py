@@ -35,17 +35,17 @@ def connecting_room_sequence(sequence_old,info_room):
     sequence_new = []
     next_room = info_room['rdest'].values
     for n in range(len(sequence_tmp)):
-        if type(sequence_tmp[n]) != list:
-            sequence_new.append([sequence_tmp[n]] + [next_room[n]])
-        else:
-            sequence_new.append(sequence_tmp[n] + [next_room[n]])
+        # drop sequence if room already accounted for
+        if next_room[n] not in sequence_tmp[n]:
+            sequence_new.append(list(sequence_tmp[n]) + [next_room[n]])
     sequence_new.sort()
+
     return sequence_new
 
 
 def cross_ventilation_path(info_building,ventil_dir):
     '''
-    This function finds the shortest path between a room with an opening on the left (or front) side
+    This function finds the shortest paths between a room with an opening on the left (or front) side
     and a room with an opening on the right (or back) side of a building.
 
     inputs:
@@ -53,7 +53,7 @@ def cross_ventilation_path(info_building,ventil_dir):
         ventil_dir = direction of cross ventilation ('LR' for left/right; 'FB' for front/back)
 
     returns:
-        io_sequence = sequence of rooms connecting the left/right or front/back sides
+        io_sequence = sequences of rooms connecting the left/right or front/back sides
     '''
 
     # choose left/right or front/back direction
@@ -69,7 +69,6 @@ def cross_ventilation_path(info_building,ventil_dir):
         print('Input error: specify LR or FB direction')
         return -1
 
-
     # get number of floors
     info_floor = info_building['floor']
     nfloor = info_floor.drop_duplicates().tolist()
@@ -79,7 +78,7 @@ def cross_ventilation_path(info_building,ventil_dir):
         print('now on floor:', nf)
 
         # -------------------------------------------------------------------------
-        # count number of openings on the left and right side of the building
+        # count number of openings on each side of the building
         noside_entry = 0
         noside_exit = 0
         for nr in range(len(info_building)):
@@ -89,50 +88,51 @@ def cross_ventilation_path(info_building,ventil_dir):
                 if (info_building.loc[nr,'rdest'] == 0) and (info_building.loc[nr,'oarea'] > 0) and (info_building.loc[nr,'oside'] == ventil_exit):
                     noside_exit  = noside_exit + 1
 
-        # one opening on each side of the building
-        if (noside_entry == 1) and (noside_exit == 1):
+        # at least one opening on each side of the building: entry and exit
+        if (noside_entry >= 1) and (noside_exit >= 1):
             side_entry = info_building.loc[(info_building['rdest'] == 0) & (info_building['oarea'] > 0) & (info_building['oside'] == ventil_entry)]
             side_exit = info_building.loc[(info_building['rdest'] == 0) & (info_building['oarea'] > 0) & (info_building['oside'] == ventil_exit)]
 
-            roside_entry = side_entry.loc[side_entry['floor'] == nf]['rorig'].values[0]
-            roside_exit = side_exit.loc[side_exit['floor'] == nf]['rorig'].values[0]
+            roside_entry = side_entry.loc[side_entry['floor'] == nf]['rorig'].tolist()
+            roside_exit = side_exit.loc[side_exit['floor'] == nf]['rorig'].tolist()
 
             print('\trooms with opening on the', ventil_str, 'sides:', roside_entry, roside_exit)
 
-            # the left and right openings are in the same room
+            # both entry and exit openings are in the same room
             if roside_entry == roside_exit:
                 print('\t-->', ventil_str, 'cross ventilation is treated as enhanced indoor-outdoor exchange on floor', nf)
                 exploring_cv = False
-            # the left and right openings are in different rooms, so there can be cross ventilation
+            # entry and exit openings are in different rooms, so there can be cross ventilation
             elif roside_entry != roside_exit:
                 exploring_cv = True
 
-        # at least one side of the building has no openings
-        if (noside_entry != 1) or (noside_exit != 1):
+        # only one side of the building has openings
+        #if (noside_entry != 1) or (noside_exit != 1):
+        else:
             print('\t-->', ventil_str, 'cross ventilation does not occur on floor', nf)
             exploring_cv = False
 
         # multiple openings on either side of the building
         # NB: this needs to be implemented at a later stage
-        if (noside_entry > 1) or (noside_exit > 1):
-            print('\tWARNING: please specify only one', ventil_str, 'aperture on floor', nf)
-            exploring_cv = False
+        #if (noside_entry > 1) or (noside_exit > 1):
+        #    print('\tWARNING: please specify only one', ventil_str, 'aperture on floor', nf)
+        #    exploring_cv = False
 
         # -------------------------------------------------------------------------
         # determine the shortest path connecting the left and the right sides of the building
         if exploring_cv == True:
-            io_sequence = []
-            tmp_sequence = [[roside_entry]]
+            seq4 = []
+            tmp_sequence = [roside_entry]
             info_floor = info_building.loc[(info_building['floor'] == nf) & (info_building['rdest'] != 0) & (info_building['oarea'] > 0)]
+
             while exploring_cv == True:
-                # on each floor find the rooms connected to other rooms, starting from the room with opening on the left side of
-                # the building and create a list of possible room sequences that connect both sides of the building
+                # on each floor find the rooms connected to other rooms, starting from the room with opening on one side of
+                # the building (left or front) and create a list of possible room sequences that connect both sides of the building
                 seq2 = []
                 #print('*** new sequence:', tmp_sequence)
                 for i in range(len(tmp_sequence)):
                     #print('now doing:', tmp_sequence[i])
                     info_room = info_floor.loc[info_building['rorig'] == tmp_sequence[i][-1]]
-
                     seq1 = connecting_room_sequence(tmp_sequence[i], info_room)
                     seq2 = seq2 + seq1
 
@@ -141,24 +141,25 @@ def cross_ventilation_path(info_building,ventil_dir):
                 seq3 = []
                 for j in range(len(seq2)):
                     io_path = seq2[j]
-                    if io_path[-1] == roside_exit:
-                        io_sequence = io_path.copy()
-                        print('\t-->', ventil_str, 'cross ventilation occurs via rooms', io_sequence, 'on floor', nf)
-                        exploring_cv = False
+                    if io_path[-1] in roside_exit:
+                        seq4.append(io_path)
+                        print('\t-->', ventil_str, 'cross ventilation occurs via rooms', seq4, 'on floor', nf)
+                    # exit appears only once in sequence
                     if io_path.count(io_path[-1]) == 1:
                         seq3.append(io_path)
 
-                tmp_sequence = seq3.copy()
-
                 # stop if there is no possible sequence connecting the left and right sides of the building
+                tmp_sequence = seq3.copy()
                 if len(tmp_sequence) == 0:
                     exploring_cv = False
-                    print('\t-->', ventil_str, 'cross ventilation is not possible on floor', nf)
 
-            # add 0 for outdoors at the beginning and end of the sequence
-            io_sequence = [0] + io_sequence + [0]
+        # sequences of rooms through which cross ventilation occurs
+        io_sequence = []
+        if len(seq4) != 0:
+            # add a 0 (for outdoors) at the beginning and end of each sequence
+            io_sequence = [ [0] + s + [0] for s in seq4 ]
         else:
-            io_sequence = [0]
+            print('\t-->', ventil_str, 'cross ventilation is not possible on floor', nf)
 
     return io_sequence
 
@@ -196,7 +197,7 @@ def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     '''
     Calculate the advection flow through an opening (door or window), given its area
     and the component of ambient wind passing through it.
-    
+
     inputs:
         io_windspd = component of the wind through the aperture (m/s)
         oarea = cross section area of the aperture (m2)
@@ -248,42 +249,44 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
     trans_params.fillna(0.0, inplace=True)
 
     # add left/right advection flows to `trans_params` array
-    onum = len(lr_sequence)-1
-    for i in range(onum):
-        iroom_trans_orig = lr_sequence[i]
-        iroom_trans_dest = lr_sequence[i+1]
-        # area of the aperture between rooms
-        info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
-                                  ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
-        area_room = info_room['oarea'].values[0]
-        # discharge coefficient of the aperture between rooms
-        Cd_coeff = 0.7/(1 + i/onum)
-        # calculate advection fluxes
-        if lr_windspd > 0:
-            trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
-        elif lr_windspd < 0:
-            trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
-        else:
-            print('\tleft/right cross ventilation does not occur')
+    for lrseq in lr_sequence:
+        onum = len(lrseq)-1
+        for i in range(onum):
+            iroom_trans_orig = lrseq[i]
+            iroom_trans_dest = lrseq[i+1]
+            # area of the aperture between rooms
+            info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
+                                      ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
+            area_room = info_room['oarea'].values[0]
+            # discharge coefficient of the aperture between rooms
+            Cd_coeff = 0.7/(1 + i/onum)
+            # calculate advection fluxes
+            if lr_windspd > 0:
+                trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+            elif lr_windspd < 0:
+                trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+            else:
+                print('\tleft/right cross ventilation does not occur')
 
     # add front/back advection flows to `trans_params` array
-    onum = len(fb_sequence)-1
-    for j in range(onum):
-        iroom_trans_orig = fb_sequence[j]
-        iroom_trans_dest = fb_sequence[j+1]
-        # area of the aperture between rooms
-        info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
-                                  ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
-        area_room = info_room['oarea'].values[0]
-        # discharge coefficient of the aperture between rooms
-        Cd_coeff = 0.7/(1 + j/onum)
-        # calculate advection fluxes
-        if fb_windspd > 0:
-            trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
-        elif fb_windspd < 0:
-            trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
-        else:
-            print('\tfront/back cross ventilation does not occur')
+    for fbseq in fb_sequence:
+        onum = len(fbseq)-1
+        for j in range(onum):
+            iroom_trans_orig = fbseq[j]
+            iroom_trans_dest = fbseq[j+1]
+            # area of the aperture between rooms
+            info_room = info_building[((info_building['rorig']==iroom_trans_orig) & (info_building['rdest']==iroom_trans_dest)) |
+                                      ((info_building['rorig']==iroom_trans_dest) & (info_building['rdest']==iroom_trans_orig))]
+            area_room = info_room['oarea'].values[0]
+            # discharge coefficient of the aperture between rooms
+            Cd_coeff = 0.7/(1 + j/onum)
+            # calculate advection fluxes
+            if fb_windspd > 0:
+                trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+            elif fb_windspd < 0:
+                trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
+            else:
+                print('\tfront/back cross ventilation does not occur')
 
     return trans_params
 
@@ -536,26 +539,19 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
             # from one room (not outdoors) to a different room (not outdoors)
             if (iroom_trans_dest != iroom_trans_orig) and (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)] != 0):
 
-                xx=1e-5 # TODO: remove after implementation of flow functions
-
                 for in_var in indoor_var_list:
 
                     # Reduce number of molecules of each species in room of ORIGIN after transport
                     # to account for outbound flux.
                     # Fluxes in `trans_params` are specified in m3/s and the time between calls to
                     # the calc_transport() function, i.e. `tchem_only`, is specified in s.
-                    data_after_trans[iroom_trans_orig][in_var] = data_after_trans[iroom_trans_orig][in_var] - (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
+                    data_after_trans[iroom_trans_orig][in_var] = data_after_trans[iroom_trans_orig][in_var] - (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)] * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
 
                     # Increase number of molecules of each species in room of DESTINATION after transport
                     # to account for inbound flux.
                     # Fluxes in `trans_params` are specified in m3/s and the time between calls to
                     # the calc_transport() function, i.e. `tchem_only`, is specified in s.
-                    data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
-
-                    #print('|------->', iroom_trans_orig, iroom_trans_dest, '>>>>>>>>>>', trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)])
-                    #print('|------->', data_before_trans[iroom_trans_orig], data_before_trans[iroom_trans_dest])
-                    #print('|------->', data_after_trans[iroom_trans_orig], data_after_trans[iroom_trans_dest])
-                    #print('Exchange Flows:', (iroom_trans_orig+1), '--->', (iroom_trans_dest+1), ' = ', trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)])
+                    data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_orig+1),(iroom_trans_dest+1)] * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
 
     # --------------------------------------------------------------------------- #
     # Account for indoor-outdoor transport
@@ -573,7 +569,7 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
                 in_var = out_var[:-3]
                 if (in_var in indoor_var_list):
                     # Increase number of molecules of each species in room by the number of molecules coming from outdoors
-                    data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_dest+1),0]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_dest][in_var])
+                    data_after_trans[iroom_trans_dest][in_var] = data_after_trans[iroom_trans_dest][in_var] + (trans_params.loc[(iroom_trans_dest+1),0] * tchem_only * 1.0E6 * data_before_trans[iroom_trans_dest][in_var])
 
     # indoor to outdoor
     for iroom_trans_orig in range(0,nroom):
@@ -584,7 +580,7 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
                 in_var = out_var[:-3]
                 if (in_var in indoor_var_list):
                     # Decrease number of molecules of each species in room by the number of molecules going to outdoors
-                    data_after_trans[iroom_trans_orig][in_var] = data_after_trans[iroom_trans_orig][in_var] - (trans_params.loc[0,(iroom_trans_orig+1)]*xx * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
+                    data_after_trans[iroom_trans_orig][in_var] = data_after_trans[iroom_trans_orig][in_var] - (trans_params.loc[0,(iroom_trans_orig+1)] * tchem_only * 1.0E6 * data_before_trans[iroom_trans_orig][in_var])
 
     # ---------------------------------------------------------------------------
     # Output concentrations (molecules/cm3) to a restart file to initialise
@@ -593,8 +589,11 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
     #Loop over all rooms from the point of view of the origin of fluxes; recall, index 0 of output_data_after_transport refers to room 1
     for iroom_trans_orig in range(0, nroom):
 
+
+        print('|------->', data_before_trans[iroom_trans_orig])
+        print('|------->', data_after_trans[iroom_trans_orig])
         #Convert numbers of molecules of each species after transport back to concentrations (molecules/cm3), assuming room volume, mrvol, is specified in m3
-        data_after_trans[iroom_trans_orig] = data_after_trans[iroom_trans_orig] / (mrvol[iroom_trans_orig]*1.0E6)
+        data_after_trans[iroom_trans_orig] = data_after_trans[iroom_trans_orig] / (mrvol[iroom_trans_orig] * 1.0E6)
 
         #Overwrite restart_data.pickle file with concentrations following transport
         output_folder = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom_trans_orig+1),'c{:04d}'.format(ichem_only-1)))
