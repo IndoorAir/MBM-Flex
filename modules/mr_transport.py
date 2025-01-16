@@ -11,7 +11,7 @@ from math import cos, sqrt
 
 def connecting_room_sequence(sequence_old,info_room):
     '''
-    Given a list of room sequences, this function creates a new list of room
+    Given a list of room sequences, create a new list of room
     sequences which include the number of each room that connects to
     the last room in each sequence.
 
@@ -21,6 +21,7 @@ def connecting_room_sequence(sequence_old,info_room):
 
     returns:
         sequence_new = final list of room sequences
+
     '''
 
     # select only rooms that are connected to other rooms
@@ -45,16 +46,18 @@ def connecting_room_sequence(sequence_old,info_room):
 
 def connecting_paths(entry_seq,exit_seq,info_rorig,info_floor):
     '''
-
+    Given a sequence of entry and exit openings for a building,
+    find all the paths connecting the left/right and front/back sides
+    of the building.
 
     inputs:
-        entry_seq =
-        exit_seq =
-        info_rorig = list of origin rooms
-        info_floor =
-        
+        entry_seq = sequence of entry openings
+        exit_seq = sequence of exit openings
+        info_rorig = origin rooms on a given floor
+        info_floor = rooms and openings on a given floor
+
     returns:
-        
+        io_sequence = list of paths connecting the left/right or front/back sides on a given floor
     '''
     io_sequence = []
     tmp_sequence = entry_seq
@@ -94,7 +97,7 @@ def connecting_paths(entry_seq,exit_seq,info_rorig,info_floor):
 
 def cross_ventilation_path(info_building,ventil_dir):
     '''
-    This function finds the shortest paths between a room with an opening on the left (or front) side
+    This function finds all the paths between a room with an opening on the left (or front) side
     and a room with an opening on the right (or back) side of a building.
 
     inputs:
@@ -102,7 +105,7 @@ def cross_ventilation_path(info_building,ventil_dir):
         ventil_dir = direction of cross ventilation ('LR' for left/right; 'FB' for front/back)
 
     returns:
-        io_sequence = sequences of rooms connecting the left/right or front/back sides
+        io_paths = list of all sequences of rooms connecting the left/right or front/back sides
     '''
 
     # choose left/right or front/back direction

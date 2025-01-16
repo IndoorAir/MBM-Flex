@@ -751,7 +751,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         reactions_numba = reactions_check(reactions_numba,particle_reactions,species)
         rate_numba = rate_numba + [['kacid' , '1.5e-32*numba_exp(14770/temp)']]
         calc_dict.update(particle_vap_dict)
-        
+    
     '''
     Optional H2O2 and O3 deposition
     '''
@@ -972,7 +972,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     master_compiled=master_compiler(master_array_dict,species)
     
     if ichem_only==0:  #JGL: Only create and save jacobian on first call to inchem_main.py for each room
-        
+    
         #Create the jacobian and save it to the output folder
         write_jacobian_build(master_array_dict,species,output_folder,path)
     
@@ -1027,7 +1027,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     if summations == True:
         for i in sums_dict:
             calculated_output_tot[i] = [density_dict[i]]
-        
+    
     if reactions_output == True:
         for i in reaction_rate_dict:
             calculated_output_tot[i] = [reaction_rate_dict[i]] #reaction rates
