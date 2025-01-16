@@ -57,8 +57,8 @@ diurnal = True   # Diurnal outdoor concentrations. Boolean
 
 city = 'London_urban'   # Source city of outdoor concentrations of O3, NO, NO2, and PM2.5
                         # Options are 'London_urban', 'London_suburban' or 'Bergen_urban'
-                        # Changes to outdoor concentrations can be done in outdoor_concentrations.py
-                        # See the INCHEM-Py manual for details of sources and fits
+                        # Changes to outdoor concentrations can be done in `outdoor_concentrations.py`
+                        # See the INCHEM-Py manual for details of sources and fits.
 
 date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 
@@ -68,12 +68,17 @@ faspect = 60   # Angle of the front side of the building (in deg N)
                # 0 if building is facing N, 90 if building is facing E, etc...
 
 Cp_coeff = [0.3,-0.2] # Pressure coefficients of the building [upwind,downwind]
+                      # Cp is an empirical parameter that is a function of the air flow
+                      # around the building: it depends on wind direction and speed,
+                      # position and orientation of the building surfaces, presence of
+                      # neighboring buildings and other obstructions to air flow.
+                      #
                       # TODO: add more options for different buildings
 
 ambient_press = 1013.0   # ambient pressure (mbar) is assumed to be constant, and is the same in all rooms
-ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant.
-                         # indoor temperature of each room is set in the corresponding
-                         # `config_rooms/mr_tvar_room_params_*.csv` file.
+ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant
+                         # NB: the indoor temperature of each room is set in the
+                         # corresponding `config_rooms/mr_tvar_room_params_*.csv` file.
 
 # human body surface/volume ratios (in cm^-1)
 bsa_bvi_adult = 0.28   # assume BSA = 1.8 m2 and BVI = 65 L
