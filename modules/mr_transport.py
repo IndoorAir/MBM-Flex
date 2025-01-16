@@ -30,17 +30,66 @@ def connecting_room_sequence(sequence_old,info_room):
         for n in range(nroom):
             sequence_tmp.append(sequence_old)
 
-    # add numbers of rooms that connect to the last rooms in each
-    # room sequence
+    # add numbers of rooms that connect to the last rooms in each room sequence
     sequence_new = []
     next_room = info_room['rdest'].values
     for n in range(len(sequence_tmp)):
         # drop sequence if room already accounted for
         if next_room[n] not in sequence_tmp[n]:
+            #print('next_room',next_room[n],sequence_tmp[n])
             sequence_new.append(list(sequence_tmp[n]) + [next_room[n]])
     sequence_new.sort()
 
     return sequence_new
+
+
+def connecting_paths(entry_seq,exit_seq,info_rorig,info_floor):
+    '''
+
+
+    inputs:
+        entry_seq =
+        exit_seq =
+        info_rorig = list of origin rooms
+        info_floor =
+        
+    returns:
+        
+    '''
+    io_sequence = []
+    tmp_sequence = entry_seq
+    exploring_cv = True
+
+    while exploring_cv == True:
+        # on each floor find the rooms connected to other rooms, starting from the room with opening
+        # on one side of the building (left or front) and create a list of possible room sequences
+        # that connect both sides of the building
+        seq2 = []
+        #print('*** new sequence:', entry_seq)
+        for i in range(len(tmp_sequence)):
+            #print('now doing:', tmp_sequence[i])
+            info_room = info_floor.loc[info_rorig == tmp_sequence[i][-1]]
+            seq1 = connecting_room_sequence(tmp_sequence[i], info_room)
+            seq2 = seq2 + seq1
+
+        # find the sequence which contains a room with an opening on one side of the building
+        # and ensure that it does not also have an opening on the opposite side
+        seq3 = []
+        for j in range(len(seq2)):
+            seq4 = seq2[j]
+            if seq4[-1] in exit_seq:
+                io_sequence = seq4.copy()
+                exploring_cv = False
+            # exit appears only once in sequence
+            if seq4.count(seq4[-1]) == 1:
+                seq3.append(seq4)
+
+        tmp_sequence = seq3.copy()
+
+        if len(tmp_sequence) == 0:
+            exploring_cv = False
+
+    return io_sequence
 
 
 def cross_ventilation_path(info_building,ventil_dir):
@@ -74,6 +123,7 @@ def cross_ventilation_path(info_building,ventil_dir):
     nfloor = info_floor.drop_duplicates().tolist()
 
     # loop over each floor
+    io_paths = []
     for nf in nfloor:
         print('now on floor:', nf)
 
@@ -96,7 +146,7 @@ def cross_ventilation_path(info_building,ventil_dir):
             roside_entry = side_entry.loc[side_entry['floor'] == nf]['rorig'].tolist()
             roside_exit = side_exit.loc[side_exit['floor'] == nf]['rorig'].tolist()
 
-            print('\trooms with opening on the', ventil_str, 'sides:', roside_entry, roside_exit)
+            print('\t-->', ventil_str, 'cross ventilation occurs via rooms:', roside_entry, roside_exit)
 
             # both entry and exit openings are in the same room
             if roside_entry == roside_exit:
@@ -112,56 +162,23 @@ def cross_ventilation_path(info_building,ventil_dir):
             print('\t-->', ventil_str, 'cross ventilation does not occur on floor', nf)
             exploring_cv = False
 
-        # multiple openings on either side of the building
-        # NB: this needs to be implemented at a later stage
-        #if (noside_entry > 1) or (noside_exit > 1):
-        #    print('\tWARNING: please specify only one', ventil_str, 'aperture on floor', nf)
-        #    exploring_cv = False
-
         # -------------------------------------------------------------------------
-        # determine the shortest path connecting the left and the right sides of the building
+        # determine the shortest paths connecting opposite sides of the building
+        io_seq = []
         if exploring_cv == True:
-            seq4 = []
-            tmp_sequence = [roside_entry]
             info_floor = info_building.loc[(info_building['floor'] == nf) & (info_building['rdest'] != 0) & (info_building['oarea'] > 0)]
+            for rentry in roside_entry:
+                for rexit in roside_exit:
+                    io_seq.append(connecting_paths([[rentry]],[[rexit]],info_building['rorig'],info_floor))
 
-            while exploring_cv == True:
-                # on each floor find the rooms connected to other rooms, starting from the room with opening on one side of
-                # the building (left or front) and create a list of possible room sequences that connect both sides of the building
-                seq2 = []
-                #print('*** new sequence:', tmp_sequence)
-                for i in range(len(tmp_sequence)):
-                    #print('now doing:', tmp_sequence[i])
-                    info_room = info_floor.loc[info_building['rorig'] == tmp_sequence[i][-1]]
-                    seq1 = connecting_room_sequence(tmp_sequence[i], info_room)
-                    seq2 = seq2 + seq1
-
-                # find the sequence which contains a room with an opening on the right side of the building
-                # and ensure that it does not also have an opening on the left side
-                seq3 = []
-                for j in range(len(seq2)):
-                    io_path = seq2[j]
-                    if io_path[-1] in roside_exit:
-                        seq4.append(io_path)
-                        print('\t-->', ventil_str, 'cross ventilation occurs via rooms', seq4, 'on floor', nf)
-                    # exit appears only once in sequence
-                    if io_path.count(io_path[-1]) == 1:
-                        seq3.append(io_path)
-
-                # stop if there is no possible sequence connecting the left and right sides of the building
-                tmp_sequence = seq3.copy()
-                if len(tmp_sequence) == 0:
-                    exploring_cv = False
+        # add a 0 (for outdoors) at the beginning and end of each sequence
+        io_seq = [ [0] + s + [0] for s in io_seq ]
 
         # sequences of rooms through which cross ventilation occurs
-        io_sequence = []
-        if len(seq4) != 0:
-            # add a 0 (for outdoors) at the beginning and end of each sequence
-            io_sequence = [ [0] + s + [0] for s in seq4 ]
-        else:
-            print('\t-->', ventil_str, 'cross ventilation is not possible on floor', nf)
+        if len(io_seq) != 0:
+            io_paths = io_paths + io_seq
 
-    return io_sequence
+    return io_paths
 
 
 def wind_components(faspect,winddir,windspd):
@@ -217,9 +234,15 @@ def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     P_downwind = 0.5 * air_density * (io_windspd**2) * Cp[1]
     delta_P = P_upwind - P_downwind
 
-    # advection flow (in m3/s)
-    adv_flow = Cd * oarea * sqrt(2/air_density) * (delta_P**flow_m)
+    # flow coefficient (K)
+    flow_coeff = Cd * oarea
 
+    # advection flow (in m3/s)
+    adv_flow = flow_coeff * sqrt(2/air_density) * (delta_P**flow_m)
+
+    print('|-------> delta_P = ', delta_P)
+    print('|-------> flow_coeff = ', flow_coeff)
+    print('|-------> adv_flow = ', adv_flow)
     return adv_flow
 
 
@@ -589,9 +612,6 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
     #Loop over all rooms from the point of view of the origin of fluxes; recall, index 0 of output_data_after_transport refers to room 1
     for iroom_trans_orig in range(0, nroom):
 
-
-        print('|------->', data_before_trans[iroom_trans_orig])
-        print('|------->', data_after_trans[iroom_trans_orig])
         #Convert numbers of molecules of each species after transport back to concentrations (molecules/cm3), assuming room volume, mrvol, is specified in m3
         data_after_trans[iroom_trans_orig] = data_after_trans[iroom_trans_orig] / (mrvol[iroom_trans_orig] * 1.0E6)
 

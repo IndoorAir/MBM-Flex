@@ -177,7 +177,7 @@ tcon_building = read_csv(config_dir+'mr_tcon_building.csv')
 # calculate the advection flow, as a function of ambient wind data.
 lr_sequence = cross_ventilation_path(tcon_building,'LR')
 fb_sequence = cross_ventilation_path(tcon_building,'FB')
-#print('lr_sequence:',lr_sequence,'\nfb_sequence:',fb_sequence)
+print('lr_sequence:',lr_sequence,'\nfb_sequence:',fb_sequence)
 
 # Information on ambient wind (used for the calculation of advection and exchange flows)
 # - wind speed (in m/s)
@@ -316,239 +316,239 @@ for iroom in range(0,nroom):
 
 # =========================================================================== #
 
-# PRIMARY LOOP: run for the duration of tchem_only, then execute the
-# transport module (`mr_transport.py`) and reinitialize the model,
-# then run again until end_of_total_integration
-for ichem_only in range (0,nchem_only): # loop over chemistry-only integration periods
+# # PRIMARY LOOP: run for the duration of tchem_only, then execute the
+# # transport module (`mr_transport.py`) and reinitialize the model,
+# # then run again until end_of_total_integration
+# for ichem_only in range (0,nchem_only): # loop over chemistry-only integration periods
 
-    """
-    Transport between rooms
+#     """
+#     Transport between rooms
 
-    Accounted starting from the second chemistry-only step
-    """
-    if ichem_only > 0:
-        # (1) Add simple treatment of transport between rooms here
-        if (__name__ == "__main__") and (nroom >= 2):
-            # convection flows
-            trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
-            # exchange flows
-            #trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
-            calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
-            print('==> transport applied at iteration:', ichem_only)
-        else:
-            print('==> transport not applied at iteration:', ichem_only)
+#     Accounted starting from the second chemistry-only step
+#     """
+#     if ichem_only > 0:
+#         # (1) Add simple treatment of transport between rooms here
+#         if (__name__ == "__main__") and (nroom >= 2):
+#             # convection flows
+#             trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
+#             # exchange flows
+#             #trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+#             calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
+#             print('==> transport applied at iteration:', ichem_only)
+#         else:
+#             print('==> transport not applied at iteration:', ichem_only)
 
-        # (2) Update t0; adjust time of day to start simulation (seconds from midnight),
-        #     reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
-        t0 = t0 + tchem_only
+#         # (2) Update t0; adjust time of day to start simulation (seconds from midnight),
+#         #     reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
+#         t0 = t0 + tchem_only
 
-    # Determine time index for tvar_params, itvar_params
-    # NB: assumes tchem_only < 3600 seconds (time resolution of tvar_params data)
-    end_of_tchem_only = t0 + tchem_only
-    t0_corrected = t0-((ceil(t0/86400)-1)*86400)
-    end_of_tchem_only_corrected = end_of_tchem_only-((ceil(t0/86400)-1)*86400)
-    if end_of_tchem_only_corrected <= 86400:
-        mid_of_tchem_only = 0.5*(t0_corrected + end_of_tchem_only_corrected)
-    else:
-        mid_of_tchem_only = (0.5*(t0_corrected + end_of_tchem_only_corrected))-86400
-        if mid_of_tchem_only < 0:
-            mid_of_tchem_only = mid_of_tchem_only + 86400
-    itvar_params = ceil(mid_of_tchem_only/3600)-1
-    #print('t0=',t0)
-    #print('end_of_tchem_only=',end_of_tchem_only)
-    #print('mid_of_tchem_only=',mid_of_tchem_only)
-    #print('itvar_params=',itvar_params)
+#     # Determine time index for tvar_params, itvar_params
+#     # NB: assumes tchem_only < 3600 seconds (time resolution of tvar_params data)
+#     end_of_tchem_only = t0 + tchem_only
+#     t0_corrected = t0-((ceil(t0/86400)-1)*86400)
+#     end_of_tchem_only_corrected = end_of_tchem_only-((ceil(t0/86400)-1)*86400)
+#     if end_of_tchem_only_corrected <= 86400:
+#         mid_of_tchem_only = 0.5*(t0_corrected + end_of_tchem_only_corrected)
+#     else:
+#         mid_of_tchem_only = (0.5*(t0_corrected + end_of_tchem_only_corrected))-86400
+#         if mid_of_tchem_only < 0:
+#             mid_of_tchem_only = mid_of_tchem_only + 86400
+#     itvar_params = ceil(mid_of_tchem_only/3600)-1
+#     #print('t0=',t0)
+#     #print('end_of_tchem_only=',end_of_tchem_only)
+#     #print('mid_of_tchem_only=',mid_of_tchem_only)
+#     #print('itvar_params=',itvar_params)
 
-    # --------------------------------------------------------------------------- #
-    # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py
-    # in each room and save the output of the run in a separate directory
-    for iroom in range (0,nroom): # loop over rooms
-        #print('iroom=',iroom)
+#     # --------------------------------------------------------------------------- #
+#     # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py
+#     # in each room and save the output of the run in a separate directory
+#     for iroom in range (0,nroom): # loop over rooms
+#         #print('iroom=',iroom)
 
-        """
-        Temperature, humidity, air density
-        """
-        # Temperatures are interpolated from a list of given values (`mr_tvar_room_params_*.csv`)
-        # using either a 'Linear' or a 'BSpline' interpolation method. The list has the format:
-        # [[time (s), temperature (K)],[time (s), temperature (K)], ...]
-        # Alternatively, a constant temperature can also be set without interpolation.
-        # Details of these methods are given in the INCHEM-Py user manual.
-        spline = 'Linear'  # 'Linear' interpolation, by default
-        temperatures = all_mrtemp[iroom] # temperature (Kelvin)
-        #print('temperatures=',temperatures)
+#         """
+#         Temperature, humidity, air density
+#         """
+#         # Temperatures are interpolated from a list of given values (`mr_tvar_room_params_*.csv`)
+#         # using either a 'Linear' or a 'BSpline' interpolation method. The list has the format:
+#         # [[time (s), temperature (K)],[time (s), temperature (K)], ...]
+#         # Alternatively, a constant temperature can also be set without interpolation.
+#         # Details of these methods are given in the INCHEM-Py user manual.
+#         spline = 'Linear'  # 'Linear' interpolation, by default
+#         temperatures = all_mrtemp[iroom] # temperature (Kelvin)
+#         #print('temperatures=',temperatures)
 
-        rel_humidity = all_mrrh[iroom][itvar_params] # relative humidity (%)
-        #print('rel_humidity=',rel_humidity)
+#         rel_humidity = all_mrrh[iroom][itvar_params] # relative humidity (%)
+#         #print('rel_humidity=',rel_humidity)
 
-        mrt = all_mrtemp[iroom][itvar_params][1]
-        M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
-        #print('mrt=',mrt,'M=',M)
+#         mrt = all_mrtemp[iroom][itvar_params][1]
+#         M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
+#         #print('mrt=',mrt,'M=',M)
 
-        # Place any species you wish to remain constant in the below dictionary. Follow the format.
-        const_dict = {
-            'O2':0.2095*M,
-            'N2':0.7809*M,
-            'H2':550e-9*M,
-            'saero':1.3e-2 # aerosol surface area concentration
-            }
-        #print('const_dict=',const_dict)
+#         # Place any species you wish to remain constant in the below dictionary. Follow the format.
+#         const_dict = {
+#             'O2':0.2095*M,
+#             'N2':0.7809*M,
+#             'H2':550e-9*M,
+#             'saero':1.3e-2 # aerosol surface area concentration
+#             }
+#         #print('const_dict=',const_dict)
 
-        """
-        Outdoor indoor change rates
-        """
-        ACRate = all_mracrate[iroom] # air change rate (s^-1)
-        #print('ACRate=',ACRate)
+#         """
+#         Outdoor indoor change rates
+#         """
+#         ACRate = all_mracrate[iroom] # air change rate (s^-1)
+#         #print('ACRate=',ACRate)
 
-        """
-        Photolysis
-        """
-        light_type = mrlightt[iroom]
-        #print('light_type=',light_type)
+#         """
+#         Photolysis
+#         """
+#         light_type = mrlightt[iroom]
+#         #print('light_type=',light_type)
 
-        glass = mrglasst[iroom]
-        #print('glass=',glass)
+#         glass = mrglasst[iroom]
+#         #print('glass=',glass)
 
-        # TODO: add more comments to this section
-        lotstr='['
-        for ihour in range (0,24):
-            if (ihour==0 and all_mrlswitch[iroom][ihour]==1) or (ihour>0 and all_mrlswitch[iroom][ihour]==1 and all_mrlswitch[iroom][ihour-1]==0):
-                lotstr=lotstr+'['+str(ihour)+','
-            if (ihour>0 and all_mrlswitch[iroom][ihour]==0 and all_mrlswitch[iroom][ihour-1]==1):
-                lotstr=lotstr+str(ihour)+'],'
-            if (ihour==23 and all_mrlswitch[iroom][ihour]==1):
-                lotstr=lotstr+str(ihour+1)+'],'
-        lotstr=lotstr.strip(',')
-        lotstr=lotstr+']'
-        if end_of_total_integration>86400:
-            lotstr=lotstr.strip("[]")
-            nrep=ceil(end_of_total_integration/86400)
-            lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'
-        #print('lotstr=',lotstr)
-        if lotstr == '[]':
-            light_type = 'off'
-        #print('light_type=',light_type)
-        if light_type != 'off':
-            light_on_times = eval(lotstr)
-        #print('light_on_times=',light_on_times)
+#         # TODO: add more comments to this section
+#         lotstr='['
+#         for ihour in range (0,24):
+#             if (ihour==0 and all_mrlswitch[iroom][ihour]==1) or (ihour>0 and all_mrlswitch[iroom][ihour]==1 and all_mrlswitch[iroom][ihour-1]==0):
+#                 lotstr=lotstr+'['+str(ihour)+','
+#             if (ihour>0 and all_mrlswitch[iroom][ihour]==0 and all_mrlswitch[iroom][ihour-1]==1):
+#                 lotstr=lotstr+str(ihour)+'],'
+#             if (ihour==23 and all_mrlswitch[iroom][ihour]==1):
+#                 lotstr=lotstr+str(ihour+1)+'],'
+#         lotstr=lotstr.strip(',')
+#         lotstr=lotstr+']'
+#         if end_of_total_integration>86400:
+#             lotstr=lotstr.strip("[]")
+#             nrep=ceil(end_of_total_integration/86400)
+#             lotstr='['+((nrep-1)*('['+lotstr+'],'))+'['+lotstr+']]'
+#         #print('lotstr=',lotstr)
+#         if lotstr == '[]':
+#             light_type = 'off'
+#         #print('light_type=',light_type)
+#         if light_type != 'off':
+#             light_on_times = eval(lotstr)
+#         #print('light_on_times=',light_on_times)
 
-        """
-        Surface deposition
-        """
-        # The surface dictionary exists in surface_dictionary.py in the modules folder.
-        # To change any surface deposition rates of individual species, or to add species
-        # this file must be edited. Production rates can be added as normal reactions
-        # in the custom inputs file. To remove surface deposition AV should be set to 0 and
-        # H2O2_dep and O3_dep should be set to False.
-        #
-        # Schemes for deposition of O3 and H2O2 are optionally provided. These schemes
-        # provide calculated surface emissions proportional to O3 and H2O2 deposition
-        # to different surfaces. The schemes can be turned off or on below.
-        # If either scheme is on then AV will be calculated as a sum of the AVs given
-        # for the individual surfaces.
+#         """
+#         Surface deposition
+#         """
+#         # The surface dictionary exists in surface_dictionary.py in the modules folder.
+#         # To change any surface deposition rates of individual species, or to add species
+#         # this file must be edited. Production rates can be added as normal reactions
+#         # in the custom inputs file. To remove surface deposition AV should be set to 0 and
+#         # H2O2_dep and O3_dep should be set to False.
+#         #
+#         # Schemes for deposition of O3 and H2O2 are optionally provided. These schemes
+#         # provide calculated surface emissions proportional to O3 and H2O2 deposition
+#         # to different surfaces. The schemes can be turned off or on below.
+#         # If either scheme is on then AV will be calculated as a sum of the AVs given
+#         # for the individual surfaces.
 
-        # switch H2O2 and O3 deposition on/off
-        H2O2_dep = True
-        O3_dep = True
+#         # switch H2O2 and O3 deposition on/off
+#         H2O2_dep = True
+#         O3_dep = True
 
-        # AV is the surface to volume ratio (cm^-1)
-        AV = (mrsurfa[iroom]/mrvol[iroom])/100 # Factor of 1/100 converts units from m^-1 to cm^-1
+#         # AV is the surface to volume ratio (cm^-1)
+#         AV = (mrsurfa[iroom]/mrvol[iroom])/100 # Factor of 1/100 converts units from m^-1 to cm^-1
 
-        # deposition on different types of surface is used only if H2O2 and O3 deposition are active
-        surfaces_AV = {             # (cm^-1)
-                        'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
-                        'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
-                        'AVWOOD'     : AV*mrwood[iroom]/100,      # wood
-                        'AVMETAL'    : AV*mrmetal[iroom]/100,     # metal
-                        'AVCONCRETE' : AV*mrconcrete[iroom]/100,  # concrete
-                        'AVPAPER'    : AV*mrpaper[iroom]/100,     # paper
-                        'AVLINO'     : AV*mrlino[iroom]/100,      # linoleum
-                        'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
-                        'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
-                        'AVHUMAN'    : 0.0000          # humans
-                        }
+#         # deposition on different types of surface is used only if H2O2 and O3 deposition are active
+#         surfaces_AV = {             # (cm^-1)
+#                         'AVSOFT'     : AV*mrsoft[iroom]/100,      # soft furnishings
+#                         'AVPAINT'    : AV*mrpaint[iroom]/100,     # painted surfaces
+#                         'AVWOOD'     : AV*mrwood[iroom]/100,      # wood
+#                         'AVMETAL'    : AV*mrmetal[iroom]/100,     # metal
+#                         'AVCONCRETE' : AV*mrconcrete[iroom]/100,  # concrete
+#                         'AVPAPER'    : AV*mrpaper[iroom]/100,     # paper
+#                         'AVLINO'     : AV*mrlino[iroom]/100,      # linoleum
+#                         'AVPLASTIC'  : AV*mrplastic[iroom]/100,   # plastic
+#                         'AVGLASS'    : AV*mrglass[iroom]/100,     # glass
+#                         'AVHUMAN'    : 0.0000          # humans
+#                         }
 
-        """
-        Breath emissions from humans
-        """
-        adults = all_mradults[iroom][itvar_params]    # Number of adults
-        children = all_mrchildren[iroom][itvar_params]   # Number of children (10 years old)
+#         """
+#         Breath emissions from humans
+#         """
+#         adults = all_mradults[iroom][itvar_params]    # Number of adults
+#         children = all_mrchildren[iroom][itvar_params]   # Number of children (10 years old)
 
-        # AV ratio for humans calculated using an average body surface area and volume
-        surfaces_AV['AVHUMAN'] = (adults * bsa_bvi_adult) + (children * bsa_bvi_child)
+#         # AV ratio for humans calculated using an average body surface area and volume
+#         surfaces_AV['AVHUMAN'] = (adults * bsa_bvi_adult) + (children * bsa_bvi_child)
 
-        """
-        Initial concentrations in molecules/cm^3 saved in a text file
-        """
-        if ichem_only == 0:
-            # for first chem-only integration, init concs is taken from initial_conditions_gas
-            # for now, same file/same concs for all rooms
-            initials_from_run = False
+#         """
+#         Initial concentrations in molecules/cm^3 saved in a text file
+#         """
+#         if ichem_only == 0:
+#             # for first chem-only integration, init concs is taken from initial_conditions_gas
+#             # for now, same file/same concs for all rooms
+#             initials_from_run = False
 
-            # If initials_from_run is set to False then initial gas conditions must be available
-            # in the file specified by initial_conditions_gas. Inclusion of particles is optional.
-            initial_conditions_gas = 'initial_concentrations.txt'
+#             # If initials_from_run is set to False then initial gas conditions must be available
+#             # in the file specified by initial_conditions_gas. Inclusion of particles is optional.
+#             initial_conditions_gas = 'initial_concentrations.txt'
 
 
-            # initial gas concentrations can be taken from a previous run of the model.
-            # Set initials_from_run to True if this is the case and move a previous out_data.pickle
-            # to the main folder and rename to in_data.pickle. The code will then take this
-            # file and extract the concentrations from the time point closest to t0 as
-            # initial conditions.
-            # NB: in_data.pickle must contain all the required species, including particles if used.
-        else:
-            # for all but the first chem-only integration, the initial concentrations
-            # are taken from previous room-specific output
-            initials_from_run = True
+#             # initial gas concentrations can be taken from a previous run of the model.
+#             # Set initials_from_run to True if this is the case and move a previous out_data.pickle
+#             # to the main folder and rename to in_data.pickle. The code will then take this
+#             # file and extract the concentrations from the time point closest to t0 as
+#             # initial conditions.
+#             # NB: in_data.pickle must contain all the required species, including particles if used.
+#         else:
+#             # for all but the first chem-only integration, the initial concentrations
+#             # are taken from previous room-specific output
+#             initials_from_run = True
 
-        """
-        Timed concentrations
-        """
-        # Set switch for timed concentrations if there is a species, or set of species that has a
-        # forced density changeat a specific point in time during the integration
-        # The timed concentrations inputs are assigned using a dictionary with the following format:
-        #
-        # timed_inputs = {species1:[[start (s), end (s), rate of increase (mol/cm^3)/s]],
-        #                 species2:[[start (s), end (s), rate of increase (mol/cm^3)/s]]}
-        timed_emissions = all_timemis[iroom]
-        #print(timed_emissions)
+#         """
+#         Timed concentrations
+#         """
+#         # Set switch for timed concentrations if there is a species, or set of species that has a
+#         # forced density changeat a specific point in time during the integration
+#         # The timed concentrations inputs are assigned using a dictionary with the following format:
+#         #
+#         # timed_inputs = {species1:[[start (s), end (s), rate of increase (mol/cm^3)/s]],
+#         #                 species2:[[start (s), end (s), rate of increase (mol/cm^3)/s]]}
+#         timed_emissions = all_timemis[iroom]
+#         #print(timed_emissions)
 
-        timed_inputs = all_mremis[iroom]
-        #print('timed_inputs=', timed_inputs)
+#         timed_inputs = all_mremis[iroom]
+#         #print('timed_inputs=', timed_inputs)
 
-        """
-        Output
-        """
-        # Each output_sub_dir is located inside output_main_dir and includes the room number (iroom)
-        # and the chemistry-only integration step (ichem_only)
-        output_sub_dir = ('%s_%s' % ('room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem_only)))
-        output_folder = ('%s/%s' % (output_main_dir,output_sub_dir))
-        os.mkdir('%s/%s' % (path,output_folder))
-        with open('%s/__init__.py' % output_folder,'w') as f:
-            pass # file created but left empty
-        #print('Creating output folder:',output_folder)
+#         """
+#         Output
+#         """
+#         # Each output_sub_dir is located inside output_main_dir and includes the room number (iroom)
+#         # and the chemistry-only integration step (ichem_only)
+#         output_sub_dir = ('%s_%s' % ('room{:02d}'.format(iroom+1),'c{:04d}'.format(ichem_only)))
+#         output_folder = ('%s/%s' % (output_main_dir,output_sub_dir))
+#         os.mkdir('%s/%s' % (path,output_folder))
+#         with open('%s/__init__.py' % output_folder,'w') as f:
+#             pass # file created but left empty
+#         #print('Creating output folder:',output_folder)
 
-        # --------------------------------------------------------------------------- #
+#         # --------------------------------------------------------------------------- #
 
-        """
-        Run the simulation
-        """
-        # print("----------------------------")
-        # print(filename, particles, INCHEM_additional, custom, rel_humidity)
-        # print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
-        # print(light_on_times, glass, AV, initials_from_run)
-        # print(initial_conditions_gas, timed_emissions, timed_inputs, dt, t0)
-        # print(iroom, ichem_only, path, output_folder)
-        # print(seconds_to_integrate, custom_name, output_graph, output_species)
-        # print(reactions_output, H2O2_dep, O3_dep, adults, children)
-        # print(surfaces_AV, __file__, temperatures, spline)
+#         """
+#         Run the simulation
+#         """
+#         # print("----------------------------")
+#         # print(filename, particles, INCHEM_additional, custom, rel_humidity)
+#         # print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
+#         # print(light_on_times, glass, AV, initials_from_run)
+#         # print(initial_conditions_gas, timed_emissions, timed_inputs, dt, t0)
+#         # print(iroom, ichem_only, path, output_folder)
+#         # print(seconds_to_integrate, custom_name, output_graph, output_species)
+#         # print(reactions_output, H2O2_dep, O3_dep, adults, children)
+#         # print(surfaces_AV, __file__, temperatures, spline)
 
-        if __name__ == "__main__":
-            from modules.inchem_main import run_inchem
-            run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-                        M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-                        light_on_times, glass, AV, initials_from_run,
-                        initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-                        iroom, ichem_only, path, output_folder,
-                        seconds_to_integrate, custom_name, output_graph, output_species,
-                        reactions_output, H2O2_dep, O3_dep, adults, children,
-                        surfaces_AV, __file__, temperatures, spline)
+#         if __name__ == "__main__":
+#             from modules.inchem_main import run_inchem
+#             run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
+#                         M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+#                         light_on_times, glass, AV, initials_from_run,
+#                         initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+#                         iroom, ichem_only, path, output_folder,
+#                         seconds_to_integrate, custom_name, output_graph, output_species,
+#                         reactions_output, H2O2_dep, O3_dep, adults, children,
+#                         surfaces_AV, __file__, temperatures, spline)
