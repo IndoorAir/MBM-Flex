@@ -304,7 +304,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
 
         #ACRate update
         ACRate_updater(t,ACRate_dict,outdoor_dict)
-
+        
         #diurnal outdoor rates
         if diurnal == True:
             out_calc_dict["n"] = n
@@ -501,7 +501,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         if summations == True:
             for i in sums_dict:
                 calculated_output[i] = []
-                
+        
         if reactions_output == True:
             for i in reaction_rate_dict:
                 calculated_output[i] = [] #reaction rates
@@ -522,7 +522,6 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         #set the integrator and arguments
         r=ode(dydt,dydy).set_integrator('lsoda',atol=atol,rtol=rtol,first_step=\
                                         first_step,nsteps=nsteps,max_step=max_step)
-            
         r.set_initial_value(y0,t0)
         
         #integrate
@@ -561,7 +560,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
                     calculated_output[i].append(outdoor_dict[i])
                 if summations == True:
                     for i in sums_dict:
-                        calculated_output[i].append(density_dict[i])  
+                        calculated_output[i].append(density_dict[i])
                 if reactions_output == True:
                     for i in reaction_rate_dict:
                         calculated_output[i].append(reaction_rate_dict[i])
@@ -614,6 +613,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         return np.log10(x)
         
     start_time=timing.time() #program start time
+
     
     '''
     Saving a copy of the settings and MCM files to the output folder
@@ -664,7 +664,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     h2o,rh = h2o_rh(t0,temp,rel_humidity,numba_exp)   
     
     species,ppool,rate_numba,reactions_numba=import_all(filename) #import from MCM download
-    
+
     pi = 4.0*numba_arctan(1.0) #for photolysis and some rates
     
     # dictionary for evaluating the reaction rates
@@ -751,7 +751,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         reactions_numba = reactions_check(reactions_numba,particle_reactions,species)
         rate_numba = rate_numba + [['kacid' , '1.5e-32*numba_exp(14770/temp)']]
         calc_dict.update(particle_vap_dict)
-                
+        
     '''
     Optional H2O2 and O3 deposition
     '''
@@ -941,7 +941,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     reaction_eval(reaction_rate_dict,reaction_number,J_dict,calc_dict,density_dict,\
                                      dt,reaction_compiled_dict,outdoor_dict,\
                                          surface_dict,timed_dict)
-    
+
     if reactions_output == True:
         ###
         # Saving a dictionary of reactions and their numbers
@@ -972,6 +972,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     master_compiled=master_compiler(master_array_dict,species)
     
     if ichem_only==0:  #JGL: Only create and save jacobian on first call to inchem_main.py for each room
+        
         #Create the jacobian and save it to the output folder
         write_jacobian_build(master_array_dict,species,output_folder,path)
     
@@ -1026,7 +1027,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     if summations == True:
         for i in sums_dict:
             calculated_output_tot[i] = [density_dict[i]]
-            
+        
     if reactions_output == True:
         for i in reaction_rate_dict:
             calculated_output_tot[i] = [reaction_rate_dict[i]] #reaction rates
@@ -1068,7 +1069,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     
     # saves all of the output data to the output folder
     with open('%s/%s/out_data.pickle' % (path,output_folder),'wb') as handle:
-        pickle.dump(output_data,handle)  
+        pickle.dump(output_data,handle)
         
     # JGL: saves last timestep of output data to a restart file in output folder
     with open('%s/%s/restart_data.pickle' % (path,output_folder),'wb') as handle:
