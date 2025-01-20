@@ -246,6 +246,8 @@ def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     print('|-------> delta_P = ', delta_P)
     print('|-------> flow_coeff = ', flow_coeff)
     print('|-------> adv_flow = ', adv_flow)
+    print('============ ')
+
     return adv_flow
 
 
