@@ -324,7 +324,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
     """
     Transport between rooms
 
-    Accounted starting from the second chemistry-only step
+    Accounted starting from the second chemistry-only step (ichem_only=1, 2, 3, etc...)
     """
     if ichem_only > 0:
 
@@ -334,7 +334,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
             # exchange flows
             #trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
-            calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
+            #calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
             print('==> transport applied at iteration:', ichem_only)
         else:
             print('==> transport not applied at iteration:', ichem_only)
@@ -479,7 +479,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                        'AVPLASTIC'  : AV_empty * mrplastic[iroom]/100,    # plastic
                        'AVGLASS'    : AV_empty * mrglass[iroom]/100,      # glass
                        'AVHUMAN'    : AV - AV_empty   # humans
-                       }
+                      }
         #print('surfaces_AV=',surfaces_AV)
 
         """
@@ -550,10 +550,10 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         if __name__ == "__main__":
             from modules.inchem_main import run_inchem
             run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-                        M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-                        light_on_times, glass, AV, initials_from_run,
-                        initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-                        iroom, ichem_only, path, output_folder,
-                        seconds_to_integrate, custom_name, output_graph, output_species,
-                        reactions_output, H2O2_dep, O3_dep, adults, children,
-                        surfaces_AV, __file__, temperatures, spline)
+                       M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+                       light_on_times, glass, AV, initials_from_run,
+                       initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+                       iroom, ichem_only, path, output_folder,
+                       seconds_to_integrate, custom_name, output_graph, output_species,
+                       reactions_output, H2O2_dep, O3_dep, adults, children,
+                       surfaces_AV, __file__, temperatures, spline)
