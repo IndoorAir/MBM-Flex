@@ -1,5 +1,4 @@
-![INCHEM-Py](INCHEMPY_logo.png "INCHEM-Py logo")
-
+![INCHEM-Py](https://raw.githubusercontent.com/DrDaveShaw/INCHEM-Py/main/INCHEMPY_logo.png "INCHEM-Py logo")
 
 [![status](https://joss.theoj.org/papers/674233ae20533ddbc12e9d89eec7b3bb/status.svg)](https://joss.theoj.org/papers/674233ae20533ddbc12e9d89eec7b3bb)
 

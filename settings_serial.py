@@ -177,7 +177,7 @@ tcon_building = read_csv(config_dir+'mr_tcon_building.csv')
 # calculate the advection flow, as a function of ambient wind data.
 lr_sequence = cross_ventilation_path(tcon_building,'LR')
 fb_sequence = cross_ventilation_path(tcon_building,'FB')
-print('lr_sequence:',lr_sequence,'\nfb_sequence:',fb_sequence)
+#print('lr_sequence:',lr_sequence,'\nfb_sequence:',fb_sequence)
 
 # Information on ambient wind (used for the calculation of advection and exchange flows)
 # - wind speed (in m/s)
@@ -187,8 +187,7 @@ tvar_params = read_csv(config_dir+'mr_tvar_wind_params.csv')
 secsfrommn = tvar_params['seconds_from_midnight'].tolist()
 mrwindspd = tvar_params['wind_speed'].tolist()
 mrwinddir = tvar_params['wind_direction'].tolist()
-#print('mrwindspd:',mrwindspd)
-#print('mrwinddir:',mrwinddir)
+#print('mrwindspd:',mrwindspd,'\nmrwinddir:',mrwinddir)
 
 # ambient air density (assuming dry air), in kg/m3
 rho = (100*ambient_press) / (287.050 * ambient_temp)
@@ -270,7 +269,6 @@ for iroom in range(0,nroom):
     all_mrrh.append(mrrh)
     all_mracrate.append(mracrlist)
     all_mrlswitch.append(mrlswitch)
-    #print('all_mrtemp=',all_mrtemp)
     #print('all_mracrate=',all_mracrate)
 
     # People in each room variable with time: `mr_tvar_expos_params_*.csv`
@@ -462,14 +460,6 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # Effective volume (m^3) of the room, accounting for the presence of people
         volume_room = mrvol[iroom] # TODO: remove volume of people from total volume of room
 
-        # AV ratio calculated using the average body surface/volume of an adult (`bsa_bvi`),
-        # and assuming that a child has a smaller surface area (61%) and volume (43%).
-        # For example:
-        # - adult : BSA = 1.8 m2 and BVI = 65 L
-        # - child :  BSA = 1.1 m2 and BVI = 28 L
-        #if (adults > 0 or children > 0):
-        #    surfaces_AV['AVHUMAN'] = bsa_bvi * (adults + 0.61 * children) / (adults + 0.43 * children)
-
         # Surface to volume ratio of the room (cm^-1) with and without people
         AV = ((surface_room + surface_people)/volume_room)/100  # Factor of 1/100 converts from m^-1 to cm^-1
         AV_empty = (surface_room/volume_room)/100
@@ -488,7 +478,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
                        'AVGLASS'    : AV_empty * mrglass[iroom]/100,      # glass
                        'AVHUMAN'    : AV - AV_empty   # humans
                        }
-        print('surfaces_AV=',surfaces_AV)
+        #print('surfaces_AV=',surfaces_AV)
 
         """
         Initial concentrations in molecules/cm^3 saved in a text file
@@ -545,6 +535,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         """
         Run the simulation
         """
+
         # print("----------------------------")
         # print(filename, particles, INCHEM_additional, custom, rel_humidity)
         # print(M, const_dict, ACRate, diurnal, city, date, lat, light_type)
