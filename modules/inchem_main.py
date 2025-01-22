@@ -25,13 +25,13 @@ You should have received a copy of the GNU General Public License
 along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 """
 def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-               M, const_dict, ACRate_dict, diurnal, city, date, lat, light_type, 
-               light_on_times, glass, AV, initials_from_run,
+               M, const_dict, ACRate_dict, diurnal, city, date, lat, light_type,
+               light_on_times, glass, volume, initials_from_run,
                initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
                iroom, ichem_only, path, output_folder,
                seconds_to_integrate, custom_name, output_graph, output_species,
-               reactions_output, H2O2_dep, O3_dep, adults, children,
-               surfaces_AV, settings_file, temperatures, spline):
+               reactions_output, H2O2_dep, O3_dep, adults,
+               children, surface_area, settings_file, temperatures, spline):
   
     '''
     import all modules
@@ -59,7 +59,8 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     import math
     import time as timing
     from modules.reactivity import reactivity_summation, reactivity_calc, production_calc
-    
+    import bisect
+
     sys.setrecursionlimit(4000) #to compile the master array the recursion limit
     #must be increased as some of the evaluated ODEs are greater than the usual
     #system limit
@@ -573,6 +574,28 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
             #print('Got here 5')  #JGL
         return dt_out,n_new,iters,ret,iter_time,calculated_output
        
+        
+    def AV_calc(volume, surface_area):
+       '''
+       Calculates the area to volume ratio for surface deposition
+       
+       inputs:
+           volume = volume of the simulated space (cm^3)
+           surface_areas = dictionary of surface areas of surfaces in the space (cm2^)
+           
+       outputs:
+           AV_dict = dictionary of surface area to volume ratios (cm^-1)
+           AV = total surface to volume ratio (cm^-1)
+       '''
+       AV = sum(surface_area.values())/volume
+       
+       surfaces_AV = {}
+       for key in surface_area:
+           surfaces_AV['AV%s' % key] = surface_area[key]/volume 
+           
+       return surfaces_AV, AV
+   
+       
     '''
     numba functions to increase speed of mathamatical operations
     '''
@@ -666,7 +689,10 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
     species,ppool,rate_numba,reactions_numba=import_all(filename) #import from MCM download
 
     pi = 4.0*numba_arctan(1.0) #for photolysis and some rates
-    
+
+    # Calculate area to volume ratio for surface deposition
+    surfaces_AV, AV = AV_calc(volume, surface_area)
+
     # dictionary for evaluating the reaction rates
     calc_dict={'M':M,
            'numba_exp':numba_exp,
@@ -678,14 +704,14 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
            'AV':AV,
            'numba_abs':numba_abs,
            'adults':adults,
-           'children':children}
+           'children':children,
+           'volume':volume}
     
     calc_dict.update(const_dict) # add constants from settings to calc_dict
     
+    # If we have surface emissions we need the individual A/V
     if H2O2_dep == True or O3_dep == True:
         calc_dict.update(surfaces_AV)
-        AV = float(sum(surfaces_AV.values()))
-        calc_dict['AV'] = AV
     
     '''
     Custom reactions and rates. Those not in the MCM download, the code does not
@@ -764,7 +790,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         reactions_numba = reactions_numba + O3_reactions
         rate_numba = rate_numba + O3_rates
     if adults+children > 0:
-        breath_rates, breath_reactions = breath_emissions()
+        breath_rates, breath_reactions = breath_emissions(volume)
         reactions_numba = reactions_numba + breath_reactions
         rate_numba = rate_numba + breath_rates
         
@@ -1083,7 +1109,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         # creates and saves a simple graph of the set species from settings
         import matplotlib.pyplot as plt
         from itertools import cycle
-        plt.figure(dpi=600,figsize=(8,4))
+        plt.figure(dpi=300,figsize=(8,4))
         colour=iter(plt.cm.gist_rainbow(np.linspace(0,1,len(output_species))))
         linestyle=cycle(['solid','dotted','dashed','dashdot'])
         for x in output_species:
