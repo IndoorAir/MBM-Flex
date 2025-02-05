@@ -113,7 +113,7 @@ def initial_conditions(initial_filename,M,species,rate_numba,calc_dict,particles
                 density_dict[i]=0
             elif i not in density_dict:
                 density_dict[i]=0
-            
+
         if 'RO2' not in density_dict:
             density_dict['RO2'] = 0
 
