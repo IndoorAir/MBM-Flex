@@ -332,7 +332,8 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             # convection flows
             trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
             # TODO: calculate exchange flows
-            #trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+            ##trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+            # apply inter-room transport of gas-phase species and particles
             calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
             print('==> transport applied at iteration:', ichem_only)
         else:

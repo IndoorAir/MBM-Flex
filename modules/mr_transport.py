@@ -614,13 +614,15 @@ def calc_transport(output_main_dir, custom_name, ichem_only, tchem_only, nroom, 
     # Output concentrations (molecules/cm3) to a restart file to initialise
     # the next integration step of duration `tchem_only`.
 
-    #Loop over all rooms from the point of view of the origin of fluxes; recall, index 0 of output_data_after_transport refers to room 1
+    # Loop over all rooms from the point of view of the origin of fluxes
+    # recall, index 0 of output_data_after_transport refers to room 1
     for iroom_trans_orig in range(0, nroom):
 
-        #Convert numbers of molecules of each species after transport back to concentrations (molecules/cm3), assuming room volume, mrvol, is specified in m3
+        # Convert numbers of molecules of each species after transport back to concentrations (molecules/cm3),
+        # assuming room volume (mrvol) is specified in m3
         data_after_trans[iroom_trans_orig] = data_after_trans[iroom_trans_orig] / (mrvol[iroom_trans_orig] * 1.0E6)
 
-        #Overwrite restart_data.pickle file with concentrations following transport
+        # Overwrite restart_data.pickle file with concentrations following transport
         output_folder = ("%s/%s_%s" % (output_main_dir,'room{:02d}'.format(iroom_trans_orig+1),'c{:04d}'.format(ichem_only-1)))
         with open(("%s/%s" % (output_folder,'restart_data.pickle')),'wb') as handle:
             pickle.dump(data_after_trans[iroom_trans_orig],handle)
