@@ -20,7 +20,6 @@ VARIABLE
 *;
 JJ1 = 3e-5 ;
 JJ4 = 8e-3 ;
-KO1DH2O = 2.14D-10*H2O ;
 *;
 * Complex reactions ;
 *;
