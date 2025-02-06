@@ -64,7 +64,7 @@ date = '21-06-2020'   # Day of simulation in format DD-MM-YYYY
 
 lat = 45.4   # Latitude of simulation location
 
-faspect = 0   # Angle of the front side of the building (deg N)
+faspect = 180   # Angle of the front side of the building (deg N)
                # 0 if building is facing N, 90 if building is facing E, etc...
 
 Cp_coeff = [0.3,-0.2] # Pressure coefficients of the building [upwind,downwind]
@@ -96,7 +96,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 tchem_only = 300     # NB: must be < 3600 seconds (1 hour)
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 3600*2     # NB: MUST BE A MULTIPLE OF tchem_only !!
+total_seconds_to_integrate = 3600/6     # NB: MUST BE A MULTIPLE OF tchem_only !!
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
@@ -454,11 +454,11 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         # Number of adults and children (10 years old) in the room
         adults = all_mradults[iroom][itvar_params]
         children = all_mrchildren[iroom][itvar_params]
-        
+
         # Surface areas (cm^2) of the empty room and of the people in the room, if present
         surface_room = mrsurfa[iroom]*1e4
         surface_people = (adults*bsa_adult*1e4) + (children*bsa_child*1e4)
-        
+
         # Effective volume (cm^3) of the room, accounting for the presence of people
         volume = mrvol[iroom]*1e6 # TODO: account for volume of people in the room
 
@@ -466,7 +466,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #AV = ((surface_room + surface_people)/volume_room)/100  # Factor of 1/100 converts from m^-1 to cm^-1
         #AV_empty = (surface_room/volume_room)/100
 
-        # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches 
+        # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches
         # (H2O2_dep, O3_dep) are active, otherwise AV is used
         surface_area = {             # (cm^2)
                        'SOFT'     : surface_room * mrsoft[iroom]/100,       # soft furnishings

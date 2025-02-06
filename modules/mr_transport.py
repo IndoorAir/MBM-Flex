@@ -246,7 +246,6 @@ def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     print('|-------> delta_P = ', delta_P)
     print('|-------> flow_coeff = ', flow_coeff)
     print('|-------> adv_flow = ', adv_flow)
-    print('============ ')
 
     return adv_flow
 
@@ -288,7 +287,8 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
             area_room = info_room['oarea'].values[0]
             # discharge coefficient of the aperture between rooms
             Cd_coeff = 0.7/(1 + i/onum)
-            # calculate advection fluxes
+            # calculate advection fluxes left-to-right
+            print('============\n', info_room)
             if lr_windspd > 0:
                 trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             elif lr_windspd < 0:
@@ -308,7 +308,8 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
             area_room = info_room['oarea'].values[0]
             # discharge coefficient of the aperture between rooms
             Cd_coeff = 0.7/(1 + j/onum)
-            # calculate advection fluxes
+            # calculate advection fluxes front-to-back
+            print('============\n', info_room)
             if fb_windspd > 0:
                 trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             elif fb_windspd < 0:
