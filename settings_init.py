@@ -97,18 +97,18 @@ seconds_to_integrate = tchem_only
 # output folder name and settings file copy name.
 custom_name = 'TestSerial'
 
+# This function purely outputs a graph to the
+# output folder of a list of selected species and a CSV of concentrations.
+# If the species do not exist in the run then a key error will cause it to fail
+output_graph = False
+output_species = ['O3','O3OUT']
+
 # INCHEM-Py calculates the rate constant for each reaction at every time point
 # Setting reactions_output to True saves all reactions and their assigned constant
 # to reactions.pickle and adds all calculated reaction rates to the out_data.pickle
 # file which will increase its size substantially. Surface deposition rates are also
 # added to the out_data.pickle file for analysis.
 reactions_output = True
-
-# This function purely outputs a graph to the
-# output folder of a list of selected species and a CSV of concentrations.
-# If the species do not exist in the run then a key error will cause it to fail
-output_graph = False
-output_species = ['O3','O3OUT']
 
 # Setting the main output folder in the current working directory
 path=os.getcwd()

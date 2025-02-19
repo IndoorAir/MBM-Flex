@@ -110,15 +110,6 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
         #print('mrt=',mrt,'M=',M)
 
-        # Place any species you wish to remain constant in the below dictionary. Follow the format.
-        const_dict = {
-            'O2':0.2095*M,
-            'N2':0.7809*M,
-            'H2':550e-9*M,
-            'saero':1.3e-2 # aerosol surface area concentration
-            }
-        #print('const_dict=',const_dict)
-
         """
         Outdoor indoor change rates
         """
@@ -204,6 +195,30 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         #print('surface_area=',surface_area)
 
         """
+        Timed concentrations
+        """
+        # Set switch for timed concentrations if there is a species, or set of species that has a
+        # forced density changeat a specific point in time during the integration
+        # The timed concentrations inputs are assigned using a dictionary with the following format:
+        #
+        # timed_inputs = {species1:[[start (s), end (s), rate of increase (mol/cm^3)/s]],
+        #                 species2:[[start (s), end (s), rate of increase (mol/cm^3)/s]]}
+        timed_emissions = all_timemis[iroom]
+        #print(timed_emissions)
+
+        timed_inputs = all_mremis[iroom]
+        #print('timed_inputs=', timed_inputs)
+
+        # Place any species you wish to remain constant in the below dictionary. Follow the format.
+        const_dict = {
+            'O2':0.2095*M,
+            'N2':0.7809*M,
+            'H2':550e-9*M,
+            'saero':1.3e-2 # aerosol surface area concentration
+            }
+        #print('const_dict=',const_dict)
+
+        """
         Initial concentrations in molecules/cm^3 saved in a text file
         """
         if ichem_only == 0:
@@ -225,21 +240,6 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
             # for all but the first chem-only integration, the initial concentrations
             # are taken from previous room-specific output
             initials_from_run = True
-
-        """
-        Timed concentrations
-        """
-        # Set switch for timed concentrations if there is a species, or set of species that has a
-        # forced density changeat a specific point in time during the integration
-        # The timed concentrations inputs are assigned using a dictionary with the following format:
-        #
-        # timed_inputs = {species1:[[start (s), end (s), rate of increase (mol/cm^3)/s]],
-        #                 species2:[[start (s), end (s), rate of increase (mol/cm^3)/s]]}
-        timed_emissions = all_timemis[iroom]
-        #print(timed_emissions)
-
-        timed_inputs = all_mremis[iroom]
-        #print('timed_inputs=', timed_inputs)
 
         """
         Output
