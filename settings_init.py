@@ -111,7 +111,7 @@ output_species = ['O3','O3OUT']
 reactions_output = True
 
 # Setting the main output folder in the current working directory
-path=os.getcwd()
+path = os.getcwd()
 now = datetime.datetime.now()
 output_main_dir = ("%s_%s" % (now.strftime("%Y%m%d_%H%M%S"),custom_name))
 os.mkdir('%s/%s' % (path,output_main_dir))

@@ -45,23 +45,22 @@ from multiprocessing import Pool # Parallel
 #sys.path.append(os.getcwd())
 
 # --------------------------------------------------------------------------- #
-def parallel_room_integrations(iroom, ichem_only, temp, rel_humidity, M, AER, light_type, glass, AV, light_on_times, timed_inputs,
-                               custom_name, filename, particles, INCHEM_additional, custom, timed_emissions, dt, t0, seconds_to_integrate,
-                               output_graph, output_species):
+def parallel_room_integrations(filename, particles, INCHEM_additional, custom, rel_humidity,
+                               M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+                               light_on_times, glass, volume, timed_emissions, timed_inputs,
+                               dt, t0, iroom, ichem_only, path, seconds_to_integrate,
+                               custom_name, output_graph, output_species,
+                               reactions_output, H2O2_dep, O3_dep, adults,
+                               children, surface_area, temperatures, spline):
     '''
+    Arguments are the same as run_inchem(), except
+    initials_from_run, initial_conditions_gas, output_folder which are
+    defined in this function and __file__
+
     '''
 
     print('Inside parallel_room_integrations, iroom=',iroom,'ichem_only=',ichem_only)
 
-    # Place any species you wish to remain constant in the below dictionary. Follow the format.
-    const_dict = {
-        'O2':0.2095*M,
-        'N2':0.7809*M,
-        'H2':550e-9*M,
-        'saero':1.3e-2 # aerosol surface area concentration
-        }
-    #print('const_dict=',const_dict)
-    
     """
     Initial concentrations in molecules/cm^3 saved in a text file
     """
@@ -112,16 +111,16 @@ def parallel_room_integrations(iroom, ichem_only, temp, rel_humidity, M, AER, li
     # print(seconds_to_integrate, custom_name, output_graph, output_species)
     # print(reactions_output, H2O2_dep, O3_dep, adults)
     # print(children, surface_area, __file__, temperatures, spline)
-       
+
     from modules.inchem_main import run_inchem
     run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
-                       M, const_dict, ACRate, diurnal, city, date, lat, light_type,
-                       light_on_times, glass, volume, initials_from_run,
-                       initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
-                       iroom, ichem_only, path, output_folder,
-                       seconds_to_integrate, custom_name, output_graph, output_species,
-                       reactions_output, H2O2_dep, O3_dep, adults,
-                       children, surface_area, __file__, temperatures, spline)
+               M, const_dict, ACRate, diurnal, city, date, lat, light_type,
+               light_on_times, glass, volume, initials_from_run,
+               initial_conditions_gas, timed_emissions, timed_inputs, dt, t0,
+               iroom, ichem_only, path, output_folder,
+               seconds_to_integrate, custom_name, output_graph, output_species,
+               reactions_output, H2O2_dep, O3_dep, adults,
+               children, surface_area, __file__, temperatures, spline)
 
     return
 
@@ -160,6 +159,15 @@ def run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_
         mrt = all_mrtemp[iroom][itvar_params][1]
         M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
         #print('mrt=',mrt,'M=',M)
+
+        # Place any species you wish to remain constant in the below dictionary. Follow the format.
+        const_dict = {
+            'O2':0.2095*M,
+            'N2':0.7809*M,
+            'H2':550e-9*M,
+            'saero':1.3e-2 # aerosol surface area concentration
+        }
+        #print('const_dict=',const_dict)
 
         """
         Outdoor indoor change rates
@@ -270,32 +278,43 @@ def run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_
         #print('const_dict=',const_dict)
 
         #
-        room_inputs[iroom][0] = iroom
-        room_inputs[iroom][1] = ichem_only
-        room_inputs[iroom][2] = temperatures
-        room_inputs[iroom][3] = rel_humidity
-        room_inputs[iroom][4] = M
-        room_inputs[iroom][5] = ACRate
-        room_inputs[iroom][6] = light_type
-        room_inputs[iroom][7] = glass
-        room_inputs[iroom][8] = 
-        room_inputs[iroom][9] = light_on_times
-        room_inputs[iroom][10] = 
-        room_inputs[iroom][11] = custom_name
-        room_inputs[iroom][12] = filename
-        room_inputs[iroom][13] = particles
-        room_inputs[iroom][14] = INCHEM_additional
-        room_inputs[iroom][15] = custom
+        room_inputs[iroom][0] = filename
+        room_inputs[iroom][1] = particles
+        room_inputs[iroom][2] = INCHEM_additional
+        room_inputs[iroom][3] = custom
+        room_inputs[iroom][4] = rel_humidity
+        room_inputs[iroom][5] = M
+        room_inputs[iroom][6] = const_dict
+        room_inputs[iroom][7] = ACRate
+        room_inputs[iroom][8] = diurnal
+        room_inputs[iroom][9] = city
+        room_inputs[iroom][10] = date
+        room_inputs[iroom][11] = lat
+        room_inputs[iroom][12] = light_type
+        room_inputs[iroom][13] = light_on_times
+        room_inputs[iroom][14] = glass
+        room_inputs[iroom][15] = volume
         room_inputs[iroom][16] = timed_emissions
-        room_inputs[iroom][17] = dt
-        room_inputs[iroom][18] = t0
-        room_inputs[iroom][19] = seconds_to_integrate
-        room_inputs[iroom][20] = output_graph
-        room_inputs[iroom][21] = output_species
-
+        room_inputs[iroom][17] = timed_inputs
+        room_inputs[iroom][18] = dt
+        room_inputs[iroom][19] = t0
+        room_inputs[iroom][20] = iroom
+        room_inputs[iroom][21] = ichem_only
+        room_inputs[iroom][22] = path
+        room_inputs[iroom][23] = seconds_to_integrate
+        room_inputs[iroom][24] = custom_name
+        room_inputs[iroom][25] = output_graph
+        room_inputs[iroom][26] = output_species
+        room_inputs[iroom][27] = reactions_output
+        room_inputs[iroom][28] = H2O2_dep
+        room_inputs[iroom][29] = O3_dep
+        room_inputs[iroom][30] = adults
+        room_inputs[iroom][31] = children
+        room_inputs[iroom][32] = surface_area
+        room_inputs[iroom][33] = temperatures
+        room_inputs[iroom][34] = spline
 
         print('room_inputs=',room_inputs[iroom])
-
 
     print('Inside run_parallel_room_integrations, room_inputs=',room_inputs)
     with Pool() as pool:
