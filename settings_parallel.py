@@ -27,14 +27,10 @@ along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 
 # Import modules
 import os
-import sys
-import datetime
 from math import ceil
-from pandas import read_csv
+from multiprocessing import Pool
 
-from modules.mr_transport import cross_ventilation_path, set_advection_flows, set_exchange_flows, calc_transport
-
-from multiprocessing import Pool # Parallel
+from modules.mr_transport import set_advection_flows, set_exchange_flows, calc_transport
 
 # =============================================================================================== #
 
@@ -51,7 +47,7 @@ def parallel_room_integrations(filename, particles, INCHEM_additional, custom, r
                                dt, t0, iroom, ichem_only, path, seconds_to_integrate,
                                custom_name, output_graph, output_species,
                                reactions_output, H2O2_dep, O3_dep, adults,
-                               children, surface_area, temperatures, spline):
+                               children, surface_area, temperatures, spline, output_main_dir):
     '''
     Arguments are the same as run_inchem(), except
     initials_from_run, initial_conditions_gas, output_folder which are
@@ -125,10 +121,13 @@ def parallel_room_integrations(filename, particles, INCHEM_additional, custom, r
     return
 
 # --------------------------------------------------------------------------- #
-def run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_mrpres, all_mraer, mrlightt, mrglasst,
-                                   itvar_params, mrvol, mrsurfa, all_mrlswitch, all_mremis, custom_name, filename,
-                                   particles, INCHEM_additional, custom, dt, t0, seconds_to_integrate,
-                                   output_graph, output_species): # Parallel
+def run_parallel_room_integrations(filename, particles, INCHEM_additional, custom, diurnal, city, date, lat,
+                                   ambient_press, bsa_adult, bsa_child, dt, t0, end_of_total_integration,
+                                   seconds_to_integrate, custom_name, output_graph, output_species, reactions_output,
+                                   path, output_main_dir, nroom, mrvol, mrsurfa, mrlightt, mrglasst, mrsoft, mrpaint,
+                                   mrwood, mrmetal, mrconcrete, mrpaper, mrlino, mrplastic, mrglass, mrother,
+                                   all_mrtemp, all_mrrh, all_mracrate, all_mrlswitch, all_mradults, all_mrchildren,
+                                   all_mremis, all_timemis, ichem_only, itvar_params): # Parallel
     '''
     '''
 
@@ -313,6 +312,7 @@ def run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_
         room_inputs[iroom][32] = surface_area
         room_inputs[iroom][33] = temperatures
         room_inputs[iroom][34] = spline
+        room_inputs[iroom][35] = output_main_dir
 
         print('room_inputs=',room_inputs[iroom])
 
@@ -372,13 +372,10 @@ if __name__ == '__main__':
         #print('mid_of_tchem_only=',mid_of_tchem_only)
         #print('itvar_params=',itvar_params)
 
-        run_parallel_room_integrations(filename, particles, INCHEM_additional, custom,
-                                       diurnal, city, date, lat, faspect, Cp_coeff,
-                                       ambient_press, ambient_temp, bsa_adult, bsa_child,
-                                       dt, t0, seconds_to_integrate, custom_name, output_graph,
-                                       output_species, reactions_output, nroom, ichem_only,
-                                       mrvol, mrsurfa, mrglasst , mrsoft, mrpaint, mrwood, mrmetal,
-                                       mrconcrete, mrpaper, mrlino, mrplastic, mrglass, mrother,
-                                       all_mrtemp, all_mrrh, all_mracrate, all_mrlswitch, all_mradults,
-                                       all_mrchildren, all_mremis, all_timemis, all_mremis,
-                                       itvar_params)
+        run_parallel_room_integrations(filename, particles, INCHEM_additional, custom, diurnal, city, date, lat,
+                                       ambient_press, bsa_adult, bsa_child, dt, t0, end_of_total_integration,
+                                       seconds_to_integrate, custom_name, output_graph, output_species, reactions_output,
+                                       path, output_main_dir, nroom, mrvol, mrsurfa, mrlightt, mrglasst, mrsoft, mrpaint,
+                                       mrwood, mrmetal, mrconcrete, mrpaper, mrlino, mrplastic, mrglass, mrother,
+                                       all_mrtemp, all_mrrh, all_mracrate, all_mrlswitch, all_mradults, all_mrchildren,
+                                       all_mremis, all_timemis, ichem_only, itvar_params)

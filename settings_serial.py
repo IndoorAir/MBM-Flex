@@ -27,12 +27,9 @@ along with INCHEM-Py.  If not, see <https://www.gnu.org/licenses/>.
 
 # Import modules
 import os
-import sys
-import datetime
 from math import ceil
-from pandas import read_csv
 
-from modules.mr_transport import cross_ventilation_path, set_advection_flows, set_exchange_flows, calc_transport
+from modules.mr_transport import set_advection_flows, set_exchange_flows, calc_transport
 
 # =============================================================================================== #
 
