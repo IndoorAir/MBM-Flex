@@ -31,12 +31,10 @@ import sys
 import datetime
 from math import ceil
 from pandas import read_csv
-#import csv
-#import shutil
-#from numba import njit, prange
+
+from modules.mr_transport import cross_ventilation_path, set_advection_flows, set_exchange_flows, calc_transport
 
 from multiprocessing import Pool # Parallel
-
 
 # =============================================================================================== #
 
@@ -47,7 +45,9 @@ from multiprocessing import Pool # Parallel
 #sys.path.append(os.getcwd())
 
 # --------------------------------------------------------------------------- #
-def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_type,glass,AV,light_on_times,timed_inputs,custom_name,filename,particles,INCHEM_additional,custom,timed_emissions,dt,t0,seconds_to_integrate,output_graph,output_species):
+def parallel_room_integrations(iroom, ichem_only, temp, rel_humidity, M, AER, light_type, glass, AV, light_on_times, timed_inputs,
+                               custom_name, filename, particles, INCHEM_additional, custom, timed_emissions, dt, t0, seconds_to_integrate,
+                               output_graph, output_species):
     '''
     '''
 
@@ -255,7 +255,10 @@ def parallel_room_integrations(iroom,ichem_only,temp,rel_humidity,M,AER,light_ty
     return
 
 # --------------------------------------------------------------------------- #
-def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpres,all_mraer,mrlightt,mrglasst,itvar_params,mrvol,mrsurfa,all_mrlswitch,all_mremis,custom_name,filename,particles,INCHEM_additional,custom,dt,t0,seconds_to_integrate,output_graph,output_species): # Parallel
+def run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_mrpres, all_mraer, mrlightt, mrglasst,
+                                   itvar_params, mrvol, mrsurfa, all_mrlswitch, all_mremis, custom_name, filename,
+                                   particles, INCHEM_additional, custom, dt, t0, seconds_to_integrate,
+                                   output_graph, output_species): # Parallel
     '''
     '''
 
@@ -325,160 +328,44 @@ def run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpr
 
 
 if __name__ == '__main__':
-
-    filename = 'mcm_v331.fac' # facsimile format input filename
-
-    particles = True # Are we including particles. Boolean
-
-    INCHEM_additional = True #Set to True if additional reactions from the INCHEM are being used
-    #that do not appear in the MCM download
-
-    custom = False # Custom reactions that are not in the MCM included?
-    # Format of this file is in an included custom file called custom_input.txt.
-
-
-    # JGL: Moved settings re emissions to here
-    """
-    Timed concentrations
-    """
-    timed_emissions = True # is there a species, or set of species that has a forced density change
-    # at a specific point in time during the integration? If so then this needs to be set to True
-    # and the dictionary called timed_inputs needs to be populated. This takes the following form:
-    # timed_inputs = {species1:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]],
-    #                 species2:[[start time (s), end time (s), rate of increase in (mol/cm^3)/s]]}
-    # The relevant parameters are read in from from-specific csv files, mr_room_emis_params_[iroom+1]
-    nemis_species = 2 # is the number of species for which emission parameters are provided in said files
-
-
-    nroom = 3 # JGL: Number of rooms (each room treated as one box); NB room index, iroom will start from 0
-
-    #all_secsfrommn = []
-    all_mrtemp = []
-    all_mrrh = []
-    all_mrpres = []
-    all_mraer = []
-    all_mrls = []
-    all_mrlswitch = []
-
-    all_mremis = {}
-
-    for iroom in range(0, nroom):
-
-        tvar_params = read_csv("mr_tvar_room_params_"+str(iroom+1)+".csv")
-
-        secsfrommn = tvar_params['seconds_from_midnight'].tolist()
-        mrtemp = tvar_params['temp_in_kelvin'].tolist()
-        mrrh = tvar_params['rh_in_percent'].tolist()
-        mrpres = tvar_params['pressure_in_pascal'].tolist()
-        mraer = tvar_params['aer_in_per_second'].tolist()
-        mrlswitch = tvar_params['light_switch'].tolist()
-        #print('mrtemp=',mrtemp)
-
-        all_mrtemp.append(mrtemp)
-        all_mrrh.append(mrrh)
-        all_mrpres.append(mrpres)
-        all_mraer.append(mraer)
-        all_mrlswitch.append(mrlswitch)
-
-        mremis_params = read_csv("mr_room_emis_params_"+str(iroom+1)+".csv")
-        mremis_species = mremis_params['species'].tolist()
-        mremis_tstart1 = mremis_params['tstart1_in_seconds'].tolist()
-        mremis_tend1 = mremis_params['tend1_in_seconds'].tolist()
-        mremis_emis1 = mremis_params['emis1_in_molcm-3sec-1'].tolist()
-        mremis_tstart2 = mremis_params['tstart2_in_seconds'].tolist()
-        mremis_tend2 = mremis_params['tend2_in_seconds'].tolist()
-        mremis_emis2 = mremis_params['emis2_in_molcm-3sec-1'].tolist()
-        mremis_tstart3 = mremis_params['tstart3_in_seconds'].tolist()
-        mremis_tend3 = mremis_params['tend3_in_seconds'].tolist()
-        mremis_emis3 = mremis_params['emis3_in_molcm-3sec-1'].tolist()
-        mremis_tstart4 = mremis_params['tstart4_in_seconds'].tolist()
-        mremis_tend4 = mremis_params['tend4_in_seconds'].tolist()
-        mremis_emis4 = mremis_params['emis4_in_molcm-3sec-1'].tolist()
-        mremis_tstart5 = mremis_params['tstart5_in_seconds'].tolist()
-        mremis_tend5 = mremis_params['tend5_in_seconds'].tolist()
-        mremis_emis5 = mremis_params['emis5_in_molcm-3sec-1'].tolist()
-        mremis_tstart6 = mremis_params['tstart6_in_seconds'].tolist()
-        mremis_tend6 = mremis_params['tend6_in_seconds'].tolist()
-        mremis_emis6 = mremis_params['emis6_in_molcm-3sec-1'].tolist()
-
-        mremis = {}
-        for iemis_species in range(0, nemis_species):
-            mremis [mremis_species[iemis_species]] = [mremis_tstart1[iemis_species],mremis_tend1[iemis_species],mremis_emis1[iemis_species]],\
-             [mremis_tstart2[iemis_species],mremis_tend2[iemis_species],mremis_emis2[iemis_species]],\
-             [mremis_tstart3[iemis_species],mremis_tend3[iemis_species],mremis_emis3[iemis_species]],\
-             [mremis_tstart4[iemis_species],mremis_tend4[iemis_species],mremis_emis4[iemis_species]],\
-             [mremis_tstart5[iemis_species],mremis_tend5[iemis_species],mremis_emis5[iemis_species]],\
-             [mremis_tstart6[iemis_species],mremis_tend6[iemis_species],mremis_emis6[iemis_species]]
-        all_mremis [iroom] = mremis
-        #print('all_mremis(',iroom,')=',all_mremis[iroom])
-
-
-    tcon_params = read_csv("mr_tcon_room_params.csv")
-
-    mrvol = tcon_params['volume_in_m3'].tolist()
-    mrsurfa = tcon_params['surf_area_in_m2'].tolist()
-    mrlightt = tcon_params['light_type'].tolist()
-    mrglasst = tcon_params['glass_type'].tolist()
-
-
-    # JGL: Moved assignment of dt, t0 and seconds_to_integrate to here
-    """
-    Integration
-    """
-    dt = 150                        # Time between outputs (s), simulation may fail if this is too large
-    t0 = 0                          # time of day, in seconds from midnight, to start the simulation
-    total_seconds_to_integrate = 4800    # how long to run the model in seconds (86400*3 will run 3 days) #JGL: renamed total_[seconds_to_integrate]
-
-    end_of_total_integration = t0+total_seconds_to_integrate
-
-
-    tchem_only = 600 # JGL: Set length of chemistry-only integrations (between simple treatments of transport; assumed separable); NB MUST BE < 3600 SECONDS
-    nchem_only = round (total_seconds_to_integrate/tchem_only) # JGL: Calculate nearest whole number of chemistry-only integrations approximating seconds_to_integrate
-    if nchem_only == 0:
-        nchem_only = 1
-    print('total_seconds_to_integrate set to',total_seconds_to_integrate)
-    print('tchem_only set to',tchem_only)
-    print('nchem_only therefore set to',nchem_only)
-    seconds_to_integrate = tchem_only
-    print('seconds_to_integrate set to',seconds_to_integrate)
-
-
-    """
-    Output
-    """
-    # An output pickle file is automatically saved so that all data can be recovered
-    # at a later date for analysis.
-    custom_name = 'Test_20230602_Parallel'
-    print('custom_name=',custom_name)
-
-    # This function purely outputs a graph to the
-    # output folder of a list of selected species and a CSV of concentrations.
-    # If the species do not exist in the run then a key error will cause it to fail
-    output_graph = True #Boolean
-    output_species = ['O3',"O3OUT","tsp"]
-
-
-
-
-
-
-    for ichem_only in range (0,nchem_only): #JGL: Loop over chemistry-only integration periods
-        print('ichem_only=',ichem_only)
-
-        if ichem_only>0:
-            #(1) ADD SIMPLE TREATMENT OF TRANSPORT HERE
-            if (__name__ == "__main__") and (nroom >=2):
-                from modules.mr_transport import calc_transport
-                calc_transport(custom_name,ichem_only,tchem_only,nroom,mrvol)
-
-            #(2) Update t0; adjust time of day to start simulation (seconds from midnight), reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
+    from settings_init import *
+    
+    # =========================================================================== #
+    
+    # PRIMARY LOOP: run for the duration of tchem_only, then execute the
+    # transport module (`mr_transport.py`) and reinitialize the model,
+    # then run again until end_of_total_integration
+    for ichem_only in range (0,nchem_only): # loop over chemistry-only integration periods
+    
+        """
+        Transport between rooms
+    
+        Accounted starting from the second chemistry-only step (ichem_only=1, 2, 3, etc...)
+        """
+        if ichem_only > 0:
+    
+            # (1) Add simple treatment of transport between rooms here
+            if (__name__ == "__main__") and (nroom >= 2):
+                # convection flows
+                trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
+                # TODO: calculate exchange flows
+                ##trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
+                # apply inter-room transport of gas-phase species and particles
+                calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
+                print('==> transport applied at iteration:', ichem_only)
+            else:
+                print('==> transport not applied at iteration:', ichem_only)
+    
+            # (2) Update t0; adjust time of day to start simulation (seconds from midnight),
+            #     reflecting splitting total_seconds_to_integrate into nchem_only x tchem_only
             t0 = t0 + tchem_only
-
-        #JGL: Determine time index for tvar_params, itvar_params: NB ASSUMES TCHEM_ONLY < 3600 SECONDS (TIME RESOLUTION OF TVAR_PARAMS DATA)
+    
+        # Determine time index for tvar_params, itvar_params
+        # NB: assumes tchem_only < 3600 seconds (time resolution of tvar_params data)
         end_of_tchem_only = t0 + tchem_only
         t0_corrected = t0-((ceil(t0/86400)-1)*86400)
         end_of_tchem_only_corrected = end_of_tchem_only-((ceil(t0/86400)-1)*86400)
-        if end_of_tchem_only_corrected<=86400:
+        if end_of_tchem_only_corrected <= 86400:
             mid_of_tchem_only = 0.5*(t0_corrected + end_of_tchem_only_corrected)
         else:
             mid_of_tchem_only = (0.5*(t0_corrected + end_of_tchem_only_corrected))-86400
@@ -490,5 +377,7 @@ if __name__ == '__main__':
         #print('mid_of_tchem_only=',mid_of_tchem_only)
         #print('itvar_params=',itvar_params)
 
-
-        run_parallel_room_integrations(nroom,ichem_only,all_mrtemp,all_mrrh,all_mrpres,all_mraer,mrlightt,mrglasst,itvar_params,mrvol,mrsurfa,all_mrlswitch,all_mremis,custom_name,filename,particles,INCHEM_additional,custom,dt,t0,seconds_to_integrate,output_graph,output_species)
+        run_parallel_room_integrations(nroom, ichem_only, all_mrtemp, all_mrrh, all_mrpres, all_mraer, mrlightt, mrglasst,
+                                       itvar_params, mrvol, mrsurfa, all_mrlswitch, all_mremis, custom_name, filename,
+                                       particles, INCHEM_additional, custom, dt, t0, seconds_to_integrate,
+                                       output_graph, output_species)
