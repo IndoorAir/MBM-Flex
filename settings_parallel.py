@@ -57,6 +57,8 @@ def parallel_room_integrations(filename, particles, INCHEM_additional, custom, r
 
     print('Inside parallel_room_integrations, iroom=',iroom,'ichem_only=',ichem_only)
 
+    initial_conditions_gas = 'initial_concentrations.txt'
+
     """
     Initial concentrations in molecules/cm^3 saved in a text file
     """
@@ -133,7 +135,7 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
 
     print('Inside run_parallel_room_integrations, nroom=',nroom,' and ichem_only=',ichem_only)
 
-    room_inputs=[[0 for x in range(22)] for y in range(nroom)]
+    room_inputs=[[0 for x in range(36)] for y in range(nroom)]
 
     # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py
     # in each room and save the output of the run in a separate directory
