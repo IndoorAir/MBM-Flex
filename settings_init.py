@@ -73,7 +73,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 tchem_only = 300     # NB: must be < 3600 seconds (1 hour)
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 3600/6     # NB: MUST BE A MULTIPLE OF tchem_only !!
+total_seconds_to_integrate = 3600*6     # NB: MUST BE A MULTIPLE OF tchem_only !!
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
