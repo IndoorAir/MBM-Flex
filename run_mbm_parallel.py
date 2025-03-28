@@ -49,13 +49,15 @@ def parallel_room_integrations(filename, particles, INCHEM_additional, custom, r
                                reactions_output, H2O2_dep, O3_dep, adults,
                                children, surface_area, temperatures, spline, output_main_dir):
     '''
-    Arguments are the same as run_inchem(), except
-    initials_from_run, initial_conditions_gas, output_folder which are
-    defined in this function and __file__
+    This function sets the initial conditions and creates the output folders,
+    then runs the simulation in parallel mode.
 
+    Arguments are the same as run_inchem(), except for the following variables which are
+    defined in this function: initials_from_run, initial_conditions_gas, output_folder,
+    and __file__
     '''
 
-    print('Inside parallel_room_integrations, iroom=',iroom,'ichem_only=',ichem_only)
+    #print('Inside parallel_room_integrations(), iroom=',iroom,'ichem_only=',ichem_only)
 
     initial_conditions_gas = 'initial_concentrations.txt'
 
@@ -131,10 +133,13 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
                                    all_mrtemp, all_mrrh, all_mracrate, all_mrlswitch, all_mradults, all_mrchildren,
                                    all_mremis, all_timemis, ichem_only, itvar_params): # Parallel
     '''
+    Function to set up parallel integration. First create a list of inputs for each room.
+    Second provide the list of inputs to the parallel_room_integrations() function.
     '''
 
-    print('Inside run_parallel_room_integrations, nroom=',nroom,' and ichem_only=',ichem_only)
+    #print('Inside run_parallel_room_integrations(), nroom=',nroom,' and ichem_only=',ichem_only)
 
+    # Initialize list of inputs needed for individual rooms
     room_inputs=[[0 for x in range(36)] for y in range(nroom)]
 
     # SECONDARY LOOP: for each chemistry-only integration period run INCHEM-Py
@@ -161,7 +166,7 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
         M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
         #print('mrt=',mrt,'M=',M)
 
-        # Place any species you wish to remain constant in the below dictionary. Follow the format.
+        # Place any parameter that needs to remain constant in the below dictionary.
         const_dict = {
             'O2':0.2095*M,
             'N2':0.7809*M,
@@ -236,7 +241,7 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
         surface_people = (adults*bsa_adult*1e4) + (children*bsa_child*1e4)
 
         # Effective volume (cm^3) of the room, accounting for the presence of people
-        volume = mrvol[iroom]*1e6 # TODO: account for volume of people in the room
+        volume = mrvol[iroom]*1e6 # TODO: account for volume of people in the room (issue #34)
 
         # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches
         # (H2O2_dep, O3_dep) are active, otherwise AV is used
@@ -269,7 +274,8 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
         timed_inputs = all_mremis[iroom]
         #print('timed_inputs=', timed_inputs)
 
-        # Place any species you wish to remain constant in the below dictionary. Follow the format.
+        # Place any species you wish to remain constant in the below dictionary.
+        # Follow the format.
         const_dict = {
             'O2':0.2095*M,
             'N2':0.7809*M,
@@ -278,7 +284,7 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
             }
         #print('const_dict=',const_dict)
 
-        #
+        # Assign inputs needed for individual rooms
         room_inputs[iroom][0] = filename
         room_inputs[iroom][1] = particles
         room_inputs[iroom][2] = INCHEM_additional
@@ -315,18 +321,19 @@ def run_parallel_room_integrations(filename, particles, INCHEM_additional, custo
         room_inputs[iroom][33] = temperatures
         room_inputs[iroom][34] = spline
         room_inputs[iroom][35] = output_main_dir
+        #print('room_inputs=',room_inputs[iroom])
 
-        print('room_inputs=',room_inputs[iroom])
-
-    print('Inside run_parallel_room_integrations, room_inputs=',room_inputs)
+    # Parallelize parallel_room_integrations() function with the appropriate inputs for each room
     with Pool() as pool:
         pool.starmap(parallel_room_integrations,room_inputs)
 
 
-# =============================================================================================== #
+# =========================================================================================== #
 
 
 if __name__ == '__main__':
+
+    # Include user-defined settings from `settings_init.py`
     from settings_init import *
 
     # PRIMARY LOOP: run for the duration of tchem_only, then execute the
@@ -345,7 +352,7 @@ if __name__ == '__main__':
             if (__name__ == "__main__") and (nroom >= 2):
                 # convection flows
                 trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
-                # TODO: calculate exchange flows
+                # TODO: calculate exchange flows (issue #26)
                 ##trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
                 # apply inter-room transport of gas-phase species and particles
                 calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
@@ -374,6 +381,7 @@ if __name__ == '__main__':
         #print('mid_of_tchem_only=',mid_of_tchem_only)
         #print('itvar_params=',itvar_params)
 
+        # Run chemistry-only integration period in each room in parallel
         run_parallel_room_integrations(filename, particles, INCHEM_additional, custom, diurnal, city, date, lat,
                                        ambient_press, bsa_adult, bsa_child, dt, t0, end_of_total_integration,
                                        seconds_to_integrate, custom_name, output_graph, output_species, reactions_output,

@@ -31,11 +31,12 @@ from math import ceil
 
 from modules.mr_transport import set_advection_flows, set_exchange_flows, calc_transport
 
-# =============================================================================================== #
+# =========================================================================================== #
 
+# Include user-defined settings from `settings_init.py`
 from settings_init import *
 
-# =========================================================================== #
+# ======================================================================= #
 
 # PRIMARY LOOP: run for the duration of tchem_only, then execute the
 # transport module (`mr_transport.py`) and reinitialize the model,
@@ -53,7 +54,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         if (__name__ == "__main__") and (nroom >= 2):
             # convection flows
             trans_params = set_advection_flows(faspect,Cp_coeff,nroom,tcon_building,lr_sequence,fb_sequence,mrwinddir[itvar_params],mrwindspd[itvar_params],rho)
-            # TODO: calculate exchange flows
+            # TODO: calculate exchange flows (issue #26)
             ##trans_params = set_exchange_flows(tcon_building,lr_sequence,fb_sequence,trans_params)
             # apply inter-room transport of gas-phase species and particles
             calc_transport(output_main_dir,custom_name,ichem_only,tchem_only,nroom,mrvol,trans_params)
@@ -107,7 +108,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         M = ((100*ambient_press)/(8.3144626*mrt))*(6.0221408e23/1e6) # number density (molecule cm^-3)
         #print('mrt=',mrt,'M=',M)
 
-        # Place any species you wish to remain constant in the below dictionary. Follow the format.
+        # Place any parameter that needs to remain constant in the below dictionary.
         const_dict = {
             'O2':0.2095*M,
             'N2':0.7809*M,
@@ -182,7 +183,7 @@ for ichem_only in range (0,nchem_only): # loop over chemistry-only integration p
         surface_people = (adults*bsa_adult*1e4) + (children*bsa_child*1e4)
 
         # Effective volume (cm^3) of the room, accounting for the presence of people
-        volume = mrvol[iroom]*1e6 # TODO: account for volume of people in the room
+        volume = mrvol[iroom]*1e6 # TODO: account for volume of people in the room (issue #34)
 
         # Deposition on different types of surface is used only if the H2O2 and O3 deposition switches
         # (H2O2_dep, O3_dep) are active, otherwise AV is used
