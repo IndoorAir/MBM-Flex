@@ -22,7 +22,7 @@ MBM-Flex is built upon the [INCHEM-Py](https://github.com/DrDaveShaw/INCHEM-Py/)
 
 - Time-variable relative humidity, number and body surface area of adults and children (defined as less than 10 years old), ambient wind speed and direction. Number density of air calculated from pressure and temperature. These parameters are constant in the original INCHEM-Py.
 
-- Surface materials provided as a percentage of the total room surface (instead of m2).
+- Surface materials provided as a percentage of the total room surface (instead of square metres).
 
 - Outdoor-indoor exchange rate (`ACRate`) redefined to account for multiple rooms and for the implementation of inter-room convective transport.
 
