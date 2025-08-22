@@ -243,8 +243,7 @@ def flow_advection(io_windspd,oarea,Cd,Cp,air_density):
     # advection flow (in m3/s)
     adv_flow = flow_coeff * sqrt(2/air_density) * (delta_P**flow_m)
 
-    print('|-------> delta_P = ', delta_P)
-    print('|-------> flow_coeff = ', flow_coeff)
+    #print('|-------> delta_P = ', delta_P)
     print('|-------> adv_flow = ', adv_flow)
 
     return adv_flow
@@ -276,6 +275,7 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
     trans_params.fillna(0.0, inplace=True)
 
     # add left/right advection flows to `trans_params` array
+    print('\n===================== L/R FLOWS\n')
     for lrseq in lr_sequence:
         onum = len(lrseq)-1
         for i in range(onum):
@@ -288,15 +288,17 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
             # discharge coefficient of the aperture between rooms
             Cd_coeff = 0.7/(1 + i/onum)
             # calculate advection fluxes left-to-right
-            print('============\n', info_room)
             if lr_windspd > 0:
+                print('|-------> from ', iroom_trans_dest, ' to ', iroom_trans_orig)
                 trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             elif lr_windspd < 0:
+                print('|-------> from ', iroom_trans_orig, ' to ', iroom_trans_dest)
                 trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(lr_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             else:
                 print('\tleft/right cross ventilation does not occur')
 
     # add front/back advection flows to `trans_params` array
+    print('\n===================== F/B FLOWS\n')
     for fbseq in fb_sequence:
         onum = len(fbseq)-1
         for j in range(onum):
@@ -309,10 +311,11 @@ def set_advection_flows(faspect,Cp_coeff,nroom,info_building,lr_sequence,fb_sequ
             # discharge coefficient of the aperture between rooms
             Cd_coeff = 0.7/(1 + j/onum)
             # calculate advection fluxes front-to-back
-            print('============\n', info_room)
             if fb_windspd > 0:
+                print('|-------> from ', iroom_trans_dest, ' to ', iroom_trans_orig)
                 trans_params.loc[iroom_trans_dest,iroom_trans_orig] = trans_params.loc[iroom_trans_dest,iroom_trans_orig] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             elif fb_windspd < 0:
+                print('|-------> from ', iroom_trans_orig, ' to ', iroom_trans_dest)
                 trans_params.loc[iroom_trans_orig,iroom_trans_dest] = trans_params.loc[iroom_trans_orig,iroom_trans_dest] + flow_advection(fb_windspd,area_room,Cd_coeff,Cp_coeff,air_density)
             else:
                 print('\tfront/back cross ventilation does not occur')

@@ -30,6 +30,7 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 import re
+from modules.odeterm import SpeciesODETerm
 
 def initial_conditions(initial_filename,M,species,rate_numba,calc_dict,particles,initials_from_run,t0,path,output_folder,iroom,ichem_only):
     '''
@@ -224,8 +225,7 @@ def master_compiler(master_array_dict,species):
         x=[]
         for j in master_array_dict[i]:
             x.append('*'.join(j))
-        y='+'.join(x)
-        master_compiled[i]=compile(y,'<string>','eval')   
+        master_compiled[i]=SpeciesODETerm(x)
     return master_compiled
 
 

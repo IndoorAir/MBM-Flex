@@ -219,7 +219,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
                    **surface_dict,**timed_dict}
         
         for specie in species:
-            dy_dict[specie]=(eval(master_compiled[specie],{},full_dict))
+            dy_dict[specie]=master_compiled[specie](full_dict)
         return dy_dict
     
     
@@ -245,6 +245,7 @@ def run_inchem(filename, particles, INCHEM_additional, custom, rel_humidity,
         
         full_dict={**reaction_rate_dict,**density_dict,**outdoor_dict,**surface_dict,\
                    **calc_dict,**timed_dict}
+        dy_dy = np.zeros((num_species, num_species), dtype=np.float32)
         for k,v in dy_dy_dict.items():
                 dy_dy[v[0],v[1]]=eval(v[2],{},full_dict)
         return dy_dy

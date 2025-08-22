@@ -44,7 +44,7 @@ lat = 45.4   # Latitude of simulation location
 faspect = 180   # Angle of the front side of the building (deg N)
                # 0 if building is facing N, 90 if building is facing E, etc...
 
-Cp_coeff = [0.3,-0.2] # Pressure coefficients of the building [upwind,downwind]
+Cp_coeff = [0.3,0.1] # Pressure coefficients of the building [upwind,downwind]
                       # Cp is an empirical parameter that is a function of the air flow
                       # around the building: it depends on wind direction and speed,
                       # position and orientation of the building surfaces, presence of
@@ -73,7 +73,7 @@ t0 = 0       # time of day, in seconds from midnight, to start the simulation
 tchem_only = 300     # NB: must be < 3600 seconds (1 hour)
 
 # Set total duration of the model run in seconds (86400 seconds is 1 day)
-total_seconds_to_integrate = 3600*6     # NB: MUST BE A MULTIPLE OF tchem_only !!
+total_seconds_to_integrate = 1800     # NB: MUST BE A MULTIPLE OF tchem_only !!
 end_of_total_integration = t0 + total_seconds_to_integrate
 
 # Calculate nearest whole number of chemistry-only integrations,
