@@ -1,4 +1,5 @@
 import math
+import pickle
 from multiroom_model.global_settings import GlobalSettings
 from multiroom_model.simulation import Simulation
 from multiroom_model.room_factory import (
@@ -90,9 +91,14 @@ if __name__ == '__main__':
         init_conditions=initial_conditions
     )
 
+    # Save to pickle file
+
+    results_as_dictionary = dict((f"Room {i+1}", result[r]) for i, r in enumerate(rooms))
+
+    pickle.dump(results_as_dictionary, open("./results.pkl", "wb"))
+
     # Make use of results here eg
     # plot tool
-    # Save to pickle file
 
     # Demo: Print one of the many results to the output
     room_of_interest = rooms_dictionary[1]
