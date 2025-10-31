@@ -14,7 +14,7 @@ def transport_path_contains_room(room: Room, transport_path: TransportPath):
     Detect whether a room is included in the transport path
     """
     for t in transport_path.route:
-        if (t.aperture.room1 is room or t.aperture.room2 is room):
+        if (t.aperture.origin is room or t.aperture.destination is room):
             return True
     return False
 
@@ -34,7 +34,7 @@ def room_has_outdoor_aperture(room: Room, apertures: List[Aperture]):
     """
     Detect whether a room has any apertures to the outdoors
     """
-    return any((a.room1 == room and type(a.room2) is Side for a in apertures))
+    return any((a.origin == room and type(a.destination) is Side for a in apertures))
 
 
 def transport_path_angle_in_radians(transport_path: TransportPath, building_direction_in_radians: float):
@@ -172,9 +172,9 @@ class ApertureCalculation:
                  building_pressure_coefficients: Tuple[float, float] = (0, 0)):
         self.aperture = aperture
         self.transport_paths = transport_paths
-        self.is_outdoor_aperture = (type(aperture.room2) is Side)
+        self.is_outdoor_aperture = (type(aperture.destination) is Side)
         self.has_room_with_outdoor_aperture = room_has_outdoor_aperture(
-            aperture.room1, all_apertures) or room_has_outdoor_aperture(aperture.room2, all_apertures)
+            aperture.origin, all_apertures) or room_has_outdoor_aperture(aperture.destination, all_apertures)
         self.building_direction_in_radians = building_direction_in_radians
         self.air_density = air_density
         self.building_pressure_coefficients = building_pressure_coefficients
@@ -252,13 +252,13 @@ class ApertureCalculation:
         3) if this aperture goes to a room with a connection to outside ("costal" room)
         4) if this aperture is none of the above (between 2 "landlocked" rooms)
         """
-        if is_room_cross_ventilated(self.aperture.room1,
+        if is_room_cross_ventilated(self.aperture.origin,
                                     self.transport_paths,
                                     wind_speed,
                                     wind_direction,
                                     self.building_direction_in_radians):
             return 1
-        elif is_room_cross_ventilated(self.aperture.room2,
+        elif is_room_cross_ventilated(self.aperture.destination,
                                       self.transport_paths,
                                       wind_speed,
                                       wind_direction,

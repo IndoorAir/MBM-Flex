@@ -15,20 +15,20 @@ class TestAperturePopulation(unittest.TestCase):
         apertures = build_apertures("config_rooms/mr_tcon_building.csv", rooms)
         self.assertEqual(len(apertures), 25, "Expected 25 apertures")
 
-        self.assertEqual(apertures[0].room1, rooms[1])
-        self.assertEqual(apertures[0].room2, Side.Front)
+        self.assertEqual(apertures[0].origin, rooms[1])
+        self.assertEqual(apertures[0].destination, Side.Front)
         self.assertEqual(apertures[0].area, 0.000344)
 
-        self.assertEqual(apertures[21].room1, rooms[8])
-        self.assertEqual(apertures[21].room2, rooms[9])
+        self.assertEqual(apertures[21].origin, rooms[8])
+        self.assertEqual(apertures[21].destination, rooms[9])
         self.assertEqual(apertures[21].area, 0.010618)
 
-        self.assertEqual(apertures[23].room1, rooms[9])
-        self.assertEqual(apertures[23].room2, Side.Right)
+        self.assertEqual(apertures[23].origin, rooms[9])
+        self.assertEqual(apertures[23].destination, Side.Right)
         self.assertEqual(apertures[23].area, 0.000232)
 
-        self.assertEqual(apertures[24].room1, rooms[9])
-        self.assertEqual(apertures[24].room2, rooms[8])
+        self.assertEqual(apertures[24].origin, rooms[9])
+        self.assertEqual(apertures[24].destination, rooms[8])
         self.assertEqual(apertures[24].area, 0.010618)
 
     @classmethod
@@ -40,16 +40,16 @@ class TestAperturePopulation(unittest.TestCase):
         self.assertEqual(len(self.apertures), 18, "Expected 18 apertures")
 
     def test_apertures(self):
-        self.assertEqual(self.apertures[0].room1, self.rooms[1])
-        self.assertEqual(self.apertures[0].room2, Side.Front)
+        self.assertEqual(self.apertures[0].origin, self.rooms[1])
+        self.assertEqual(self.apertures[0].destination, Side.Front)
         self.assertEqual(self.apertures[0].area, 0.000344)
 
-        self.assertEqual(self.apertures[15].room1, self.rooms[8])
-        self.assertEqual(self.apertures[15].room2, self.rooms[9])
+        self.assertEqual(self.apertures[15].origin, self.rooms[8])
+        self.assertEqual(self.apertures[15].destination, self.rooms[9])
         self.assertEqual(self.apertures[15].area, 0.010618)
 
-        self.assertEqual(self.apertures[17].room1, self.rooms[9])
-        self.assertEqual(self.apertures[17].room2, Side.Right)
+        self.assertEqual(self.apertures[17].origin, self.rooms[9])
+        self.assertEqual(self.apertures[17].destination, Side.Right)
         self.assertEqual(self.apertures[17].area, 0.000232)
 
 

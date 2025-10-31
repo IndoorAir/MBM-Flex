@@ -74,17 +74,16 @@ class TestBuildingSimulation(unittest.TestCase):
         for i in range(len(calculators)):
             calculator = calculators[i]
 
-            sim_calc, sim_room1, sim_room2 = self.simulation._aperture_calculators[i]
+            sim_calc, origin_index, destination_index, _, _ = self.simulation._aperture_calculators[i]
 
-            self.assertTrue(type(sim_room1) is int)
-            self.assertEqual(self.rooms.index(calculator.aperture.room1), sim_room1)
+            self.assertTrue(type(origin_index) is int)
+            self.assertEqual(self.rooms.index(calculator.aperture.origin), origin_index)
             if (calculator.is_outdoor_aperture):
-                self.assertTrue(type(calculator.aperture.room2) is Side)
-                self.assertTrue(type(sim_room2) is Side)
-                self.assertEqual(calculator.aperture.room2, sim_room2)
+                self.assertTrue(type(calculator.aperture.destination) is Side)
+                self.assertTrue(destination_index is None)
             else:
-                self.assertTrue(type(sim_room2) is int)
-                self.assertEqual(self.rooms.index(calculator.aperture.room2), sim_room2)
+                self.assertTrue(type(destination_index) is int)
+                self.assertEqual(self.rooms.index(calculator.aperture.destination), destination_index)
 
             self.assertFalse(calculator.has_advection_flow(0, 0))
             self.assertFalse(sim_calc.has_advection_flow(0, 0))

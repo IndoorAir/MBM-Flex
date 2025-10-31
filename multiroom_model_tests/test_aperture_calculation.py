@@ -27,11 +27,11 @@ class TestApertureCalculations(unittest.TestCase):
         room2 = MockRoom()
         room3 = MockRoom()
         room4 = MockRoom()
-        aperture1 = Aperture(room1=room1, room2=Side.Front)
-        aperture2 = Aperture(room1=room1, room2=room2)
-        aperture3 = Aperture(room1=room2, room2=room3)
-        aperture4 = Aperture(room1=room3, room2=room4)
-        aperture5 = Aperture(room1=room4, room2=Side.Back)
+        aperture1 = Aperture(origin=room1, destination=Side.Front)
+        aperture2 = Aperture(origin=room1, destination=room2)
+        aperture3 = Aperture(origin=room2, destination=room3)
+        aperture4 = Aperture(origin=room3, destination=room4)
+        aperture5 = Aperture(origin=room4, destination=Side.Back)
 
         self.rooms = [room1, room2, room3, room4]
         self.apertures = [aperture1, aperture2, aperture3, aperture4, aperture5]
@@ -102,11 +102,11 @@ class TestApertureCalculationsWithWind(unittest.TestCase):
         room2 = MockRoom()
         room3 = MockRoom()
         room4 = MockRoom()
-        aperture1 = Aperture(room1=room1, room2=Side.Front)
-        aperture2 = Aperture(room1=room1, room2=room2)
-        aperture3 = Aperture(room1=room2, room2=room3)
-        aperture4 = Aperture(room1=room3, room2=room4)
-        aperture5 = Aperture(room1=room4, room2=Side.Back)
+        aperture1 = Aperture(origin=room1, destination=Side.Front)
+        aperture2 = Aperture(origin=room1, destination=room2)
+        aperture3 = Aperture(origin=room2, destination=room3)
+        aperture4 = Aperture(origin=room3, destination=room4)
+        aperture5 = Aperture(origin=room4, destination=Side.Back)
 
         self.rooms = [room1, room2, room3, room4]
         self.apertures = [aperture1, aperture2, aperture3, aperture4, aperture5]

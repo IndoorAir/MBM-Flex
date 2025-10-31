@@ -36,8 +36,8 @@ def build_apertures(csv_file: str, rooms: Dict[int, Room]) -> List[Aperture]:
             room_2 = rooms[rdest[i]]
 
         result.append(Aperture(
-            room1=room_1,
-            room2=room_2,
+            origin=room_1,
+            destination=room_2,
             area=oarea[i],
             side_of_room_1=side
         ))
@@ -56,12 +56,12 @@ def build_apertures_from_double_definition(csv_file: str, rooms: Dict[int, Room]
     result = []
     while len(apertures) > 0:
         aperture: Aperture = apertures[0]
-        if (type(aperture.room2) is Side):
+        if (type(aperture.destination) is Side):
             result.append(aperture)
             apertures.remove(aperture)
         else:
-            matching_apertures: List[Aperture] = [a for a in apertures if a.room2 ==
-                                                  aperture.room1 and a.room1 == aperture.room2]
+            matching_apertures: List[Aperture] = [a for a in apertures if a.destination ==
+                                                  aperture.origin and a.origin == aperture.destination]
             assert (len(matching_apertures) == 1)
             matching_aperture: Aperture = matching_apertures[0]
             assert (matching_aperture.area == aperture.area)

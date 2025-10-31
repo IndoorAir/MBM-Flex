@@ -56,8 +56,8 @@ def paths_through_building(rooms: List[Room], apertures: List[Aperture]) -> List
         graph[r] = Node(item=r, edges=[])
 
     for a in apertures:
-        node_1: Node = graph[a.room1]
-        node_2: Node = graph[a.room2]
+        node_1: Node = graph[a.origin]
+        node_2: Node = graph[a.destination]
         node_1.edges.append(Edge(source=node_1, destination=node_2, aperture=TransportPathParticipation(a, False)))
         node_2.edges.append(Edge(source=node_2, destination=node_1, aperture=TransportPathParticipation(a, True)))
 

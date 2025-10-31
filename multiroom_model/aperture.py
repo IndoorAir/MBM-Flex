@@ -24,8 +24,8 @@ class Aperture:
         May include the side of the room where the aperture is situated
     """
 
-    def __init__(self, room1: Room, room2: Union[Room | Side], area: float = 0, side_of_room_1: Side = Side.Unknown):
-        self.room1 = room1
-        self.room2 = room2
+    def __init__(self, origin: Room, destination: Union[Room | Side], area: float = 0, side_of_room_1: Side = Side.Unknown):
+        self.origin = origin
+        self.destination = destination
         self.side_of_room_1 = side_of_room_1
         self.area = area
