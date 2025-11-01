@@ -5,6 +5,6 @@ __pycache__/
 .Rhistory
 .*
 
-# an appropriate version of inchempy needs to be coppied over from another source before use
-# this needs to be done manually as we don't want to use a submodule
+# an appropriate version of INCHEM-Py needs to be copied from another source to the inchempy
+# directory before use; this needs to be done manually as we don't want to use a submodule
 inchempy/
