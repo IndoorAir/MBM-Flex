@@ -66,6 +66,8 @@ class Simulation:
         @param t_interval: How often to apply the effect of windows.
         """
 
+        t_final: float = t0+t_total
+
         with Pool(self._processes) as pool:
 
             # First step
@@ -82,7 +84,7 @@ class Simulation:
 
             # Loop of incrementing time by t_interval and performing the operations
             # Stop when another increment would take it over the total
-            while (solved_time+t_interval <= t_total):
+            while (solved_time+t_interval <= t_final):
 
                 # Use the initial conditions and solve for the next time interval  (performed in parallel)
                 room_results, solved_time = self._evolve_rooms(pool, solved_time, t_interval, initial_condition)
@@ -94,9 +96,9 @@ class Simulation:
                 initial_condition = self._apply_wind(pool, solved_time, t_interval, room_results)
 
             # Final step  if there is any time smaller than a single interval left to be solved
-            if solved_time < t_total:
+            if solved_time < t_final:
 
-                final_t_interval = t_total-solved_time
+                final_t_interval = t_final-solved_time
 
                 room_results, solved_time = self._evolve_rooms(pool, solved_time, final_t_interval, initial_condition)
 
