@@ -82,8 +82,9 @@ if __name__ == '__main__':
     # This lines uses the same file for all the rooms, but this could be different for the different rooms
     initial_conditions = dict((r, 'initial_concentrations.txt') for r in rooms)
 
-    # Run the simulation starting at t=0, for 25 seconds,
-    # interrupt the inchempy solver to apply the effects of windows every 6 seconds
+    # Run the simulation starting at time t0
+    # Run for a duration of t_total seconds
+    # interrupt the inchempy solver to apply the effects of windows every t_interval seconds
     result = simulation.run(
         t0=0,
         t_total=20,
