@@ -118,7 +118,7 @@ class Simulation:
             wind_speed = self._wind_definition.wind_speed.value_at_time(time)
             wind_direction = self._wind_definition.wind_direction.value_at_time(time)
             wind_direction_in_radians = wind_direction if self._wind_definition.in_radians else math.radians(
-            wind_direction)
+                wind_direction)
             return wind_speed, wind_direction_in_radians
 
     def _apply_wind(self, pool, time, t_interval, room_results):
@@ -146,9 +146,18 @@ class Simulation:
         # Use the initial conditions (text or dataframe) to produce new room results using the room evolvers
         args = [(self._room_evolvers[i], t0, t_interval, initial_condition[i], txt_file) for i in range(len(self._rooms))]
         room_results = pool.starmap(self.run_room_evolver_starmap, args)
+        # Check that each room resulted in a result at the final time
+        # If a room failed to complete, then raise the exception
+        success = True
+        for i, r in enumerate(room_results):
+            if r.index[-1] != t0+t_interval:
+                success = False
+                warning_colour = '\033[93m'
+                print(f"{warning_colour}Simulation incomplete for room {i}, only ran to time {r.index[-1]}, expected {t0+t_interval}")
+        if not success:
+            raise Exception(f"Simulation incomplete")
         # This results in a new time which we have solved to
-        solved_time = min(r.index[-1] for r in room_results)
-        return room_results, solved_time
+        return room_results, t0+t_interval
 
     def trans_matrix(self, time: float):
         """
@@ -194,6 +203,16 @@ class Simulation:
                 new_room_2_value = result[destination_index].loc[solved_time, :].add(
                     room_2_concentration_change, fill_value=0.0)
                 result[destination_index].loc[solved_time, :] = new_room_2_value
+
+        # TODO: Do something here about the risk of negative concentrations
+        # for example: `result = [r.clip(lower=0).fillna(0) for r in result]`
+
+        # If a room concentration fell below 0, print a warning
+        for i, r in enumerate(result):
+            if (r < 0).values.any():
+                warning_colour = '\033[93m'
+                print(f"{warning_colour}Warning: Aperture effects resulted in a negative concentration in room {i} at time {solved_time}")
+
         # return the augmented results
         return result
 
@@ -219,7 +238,7 @@ class Simulation:
     @staticmethod
     def build_aperture_calculator_starmap(aperture, transport_paths, apertures, rooms, global_settings):
         """
-        Create one ApertureCalculation and the accompanying data to use it 
+        Create one ApertureCalculation and the accompanying data to use it
         """
         origin_index = rooms.index(aperture.origin)
         destination_index = None if type(aperture.destination) == Side else rooms.index(aperture.destination)
