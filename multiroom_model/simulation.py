@@ -11,8 +11,10 @@ from .global_settings import GlobalSettings
 from .wind_definition import WindDefinition
 import pandas as pd
 import numpy as np
-from multiprocess import Pool
+from multiprocess import Pool, cpu_count
 
+def yellow_text(str):
+    return f"\033[93m'{str}'\033[0m"
 
 class Simulation:
     """
@@ -152,8 +154,7 @@ class Simulation:
         for i, r in enumerate(room_results):
             if r.index[-1] != t0+t_interval:
                 success = False
-                warning_colour = '\033[93m'
-                print(f"{warning_colour}Simulation incomplete for room {i}, only ran to time {r.index[-1]}, expected {t0+t_interval}")
+                print(yellow_text(f"Simulation incomplete for room {i}, only ran to time {r.index[-1]}, expected {t0+t_interval}"))
         if not success:
             raise Exception(f"Simulation incomplete")
         # This results in a new time which we have solved to
@@ -190,7 +191,7 @@ class Simulation:
         Applies the effect of the aperture results, to alter the state of the rooms
         Return the new room concentrations at the final time
         """
-        # Make a new result from the current result the the solved time
+        # Make a new result from the current result at the solved time
         result = [result.loc[[solved_time], :].astype(float) for result in room_results]
         # Go through all the aperture results
         for room_1_concentration_change, room_2_concentration_change, origin_index, destination_index in aperture_results:
@@ -209,9 +210,14 @@ class Simulation:
 
         # If a room concentration fell below 0, print a warning
         for i, r in enumerate(result):
-            if (r < 0).values.any():
-                warning_colour = '\033[93m'
-                print(f"{warning_colour}Warning: Aperture effects resulted in a negative concentration in room {i} at time {solved_time}")
+            solved_time_result = r.loc[solved_time, :]
+            negative_solved_time_result = solved_time_result[solved_time_result < 0]
+            negative_species = negative_solved_time_result.index.tolist()
+            if negative_species:
+                species_str = ", ".join(negative_species)
+                print(
+                    yellow_text(f"Warning: Aperture effects resulted in a negative concentration in room {i} at time {solved_time}. Species: {species_str}")
+                )
 
         # return the augmented results
         return result
