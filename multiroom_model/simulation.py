@@ -13,8 +13,10 @@ import pandas as pd
 import numpy as np
 from multiprocess import Pool, cpu_count
 
+
 def yellow_text(str):
-    return f"\033[93m'{str}'\033[0m"
+    return f"\033[93m{str}\033[0m"
+
 
 class Simulation:
     """
@@ -27,7 +29,7 @@ class Simulation:
                  rooms: List[RoomChemistry],
                  apertures: List[Aperture],
                  wind_definition: WindDefinition = None,
-                 processes: int = 4):
+                 cpu_count: int = cpu_count()):
         """
         @brief Initialize the Simulation with
         details about the building, rooms and apertures.
@@ -35,18 +37,18 @@ class Simulation:
         @param global_settings: Settings for the simulation which are independent of any one room or aperture.
         @param rooms: Information about the rooms.
         @param apertures: Information about the apertures.
-        @param processes: The number of processes to use when solving.
+        @param cpu_count: Cap on the number of processes to use when solving with multiprocess.
         """
 
         # Number of cores to use in multiprocessing
-        self._processes = processes
+        self._cpu_count = cpu_count
 
         self._global_settings = global_settings
         self._rooms = rooms
         self._apertures = apertures
         self._wind_definition = wind_definition
 
-        with Pool(self._processes) as pool:
+        with Pool(self._cpu_count) as pool:
 
             # For each room, build a room_evolver (performed in parallel)
             args = [(r, self._global_settings) for r in self._rooms]
@@ -70,7 +72,7 @@ class Simulation:
 
         t_final: float = t0+t_total
 
-        with Pool(self._processes) as pool:
+        with Pool(self._cpu_count) as pool:
 
             # First step
             # using the init_conditions, perform a solve on each room (performed in parallel)

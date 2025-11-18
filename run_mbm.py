@@ -75,8 +75,7 @@ if __name__ == '__main__':
         global_settings=global_settings,
         rooms=rooms,
         apertures=apertures,
-        wind_definition=wind_definition,
-        processes=5)
+        wind_definition=wind_definition)
 
     # Select an initial conditions text file for each room
     # This lines uses the same file for all the rooms, but this could be different for the different rooms
