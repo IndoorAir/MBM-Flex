@@ -1,10 +1,5 @@
-tmp*
-[0-9]*
 __pycache__/
-*.backup
-.Rhistory
-.*
 
-# an appropriate version of INCHEM-Py needs to be copied from another source to the inchempy
-# directory before use; this needs to be done manually as we don't want to use a submodule
+# an appropriate version of INCHEM-Py needs to be copied to the inchempy/ directory before use;
+# this needs to be done manually as we don't want to use a submodule
 inchempy/

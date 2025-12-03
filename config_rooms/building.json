@@ -59,16 +59,15 @@
   {"origin": "room 9", "destination": "Front", "area": 0.001129},
   {"origin": "room 9", "destination": "Right", "area": 0.000232}
   ],
-  
 "initial_conditions": {
-        "room 1": "initial_concentrations.txt",
-        "room 2": "initial_concentrations.txt",
-        "room 3": "initial_concentrations.txt",
-        "room 4": "initial_concentrations.txt",
-        "room 5": "initial_concentrations.txt",
-        "room 6": "initial_concentrations.txt",
-        "room 7": "initial_concentrations.txt",
-        "room 8": "initial_concentrations.txt",
-        "room 9": "initial_concentrations.txt"
+        "room 1": "config_chem/initial_concentrations_1.txt",
+        "room 2": "config_chem/initial_concentrations_2.txt",
+        "room 3": "config_chem/initial_concentrations_3.txt",
+        "room 4": "config_chem/initial_concentrations_4.txt",
+        "room 5": "config_chem/initial_concentrations_5.txt",
+        "room 6": "config_chem/initial_concentrations_6.txt",
+        "room 7": "config_chem/initial_concentrations_7.txt",
+        "room 8": "config_chem/initial_concentrations_8.txt",
+        "room 9": "config_chem/initial_concentrations_9.txt"
     }
 }
