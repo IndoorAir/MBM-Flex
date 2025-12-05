@@ -1,7 +1,23 @@
 # -*- coding: utf-8 -*-
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file LICENSE at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
 
-# This script reads a specified pickle file created by an MBM-Flexmodel run, 
-# It saves the variables given by the user (vars_to_extract) to a csv file for each room. 
+# This script reads a specified pickle file created by an MBM-Flex model run,
+# It saves the variables given by the user (vars_to_extract) to a csv file for each room.
 # If the variable exist outdoors, it is saved in a separate csv file.
 # All csv files are stored in the extracted_outputs folder, inside the main output directory.
 # An excel filename can optionally be provided, in which case the data will also be output to an excel file
