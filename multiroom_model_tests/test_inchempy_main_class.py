@@ -1,4 +1,22 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 import unittest
+
 from modules.inchem_main_class import InChemPyMainClass
 from multiroom_model.inchem import generate_main_class, run_main_class
 
@@ -82,13 +100,13 @@ class TestInChemPyMainClass(unittest.TestCase):
             INCHEM_additional=False)
 
         phase_1_output_concentrations, phase_1_times = run_main_class(inchem_main_class,
-                                                                      initial_conditions_gas='initial_concentrations.txt', 
+                                                                      initial_conditions_gas='initial_concentrations.txt',
                                                                       seconds_to_integrate=180)
 
         output_concentrations, phase_2_times = run_main_class(inchem_main_class,
-                                                              initials_from_run=True, 
-                                                              initial_dataframe=phase_1_output_concentrations, 
-                                                              t0=180, 
+                                                              initials_from_run=True,
+                                                              initial_dataframe=phase_1_output_concentrations,
+                                                              t0=180,
                                                               seconds_to_integrate=180)
 
         self.assertEqual(4, len(phase_1_output_concentrations))

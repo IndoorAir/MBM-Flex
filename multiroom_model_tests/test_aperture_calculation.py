@@ -1,7 +1,24 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 import math
 import unittest
-from unittest.mock import Mock, patch
 
+from unittest.mock import Mock, patch
 from multiroom_model.aperture_calculations import (
     transport_path_contains_room,
     room_has_outdoor_aperture,
@@ -281,7 +298,7 @@ class TestApertureCalculationsWithWind(unittest.TestCase):
             expected_wind = 10 * math.cos(angle-math.pi)
 
             wind_sign = -1 if expected_wind<0 else 1
-                
+
             self.assertAlmostEqual(rate, reversed_sign*wind_sign*1.234)
 
             args, _ = mock.call_args
@@ -329,7 +346,6 @@ class TestApertureCalculationsWithWind(unittest.TestCase):
 
         with self.subTest("flow angle 180 end"):
             test(4, math.pi, 1.0)
-
 
     def test_exchange_category(self):
         # everything cross ventilated if the wind is in the correct direction

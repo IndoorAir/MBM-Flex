@@ -1,5 +1,23 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 import unittest
 import pickle
+
 from modules.inchem_main_class import InChemPyMainClass
 from multiroom_model.inchem import generate_main_class, run_main_class
 from multiroom_model.inchem import InChemPyInstance
@@ -43,10 +61,10 @@ class TestInChemPyClassResults(unittest.TestCase):
             INCHEM_additional=False)
 
 
-        output_concentrations_A, _ = run_main_class(inchem_main_class, 
+        output_concentrations_A, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=180)
 
-        output_concentrations_B, _ = run_main_class(inchem_main_class, 
+        output_concentrations_B, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=180)
 
         self.assertEqual(4, len(output_concentrations_A))
@@ -67,13 +85,13 @@ class TestInChemPyClassResults(unittest.TestCase):
             particles=False,
             INCHEM_additional=False)
 
-        output_concentrations_A1, _ = run_main_class(inchem_main_class, 
+        output_concentrations_A1, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=180)
 
-        output_concentrations_A2, _ = run_main_class(inchem_main_class, 
+        output_concentrations_A2, _ = run_main_class(inchem_main_class,
             initials_from_run= True, initial_dataframe= output_concentrations_A1, t0=180, seconds_to_integrate=180)
 
-        output_concentrations_B, _ = run_main_class(inchem_main_class, 
+        output_concentrations_B, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=360)
 
         self.assertEqual(4, len(output_concentrations_A1))
@@ -109,7 +127,7 @@ class TestInChemPyClassResults(unittest.TestCase):
             INCHEM_additional=False)
 
 
-        output_concentrations, _ = run_main_class(inchem_main_class, 
+        output_concentrations, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=360)
 
         benchmark_concentrations = self.benchmark_results()
@@ -136,9 +154,9 @@ class TestInChemPyClassResults(unittest.TestCase):
             INCHEM_additional=False)
 
 
-        interim_concentrations, _ = run_main_class(inchem_main_class, 
+        interim_concentrations, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=180)
-        output_concentrations, _ = run_main_class(inchem_main_class, 
+        output_concentrations, _ = run_main_class(inchem_main_class,
             initials_from_run= True, initial_dataframe=interim_concentrations, t0=180, seconds_to_integrate=180)
 
         benchmark_concentrations = self.benchmark_results()
@@ -168,9 +186,9 @@ class TestInChemPyClassResults(unittest.TestCase):
             INCHEM_additional=False)
 
 
-        interim_concentrations, _ = run_main_class(inchem_main_class, 
+        interim_concentrations, _ = run_main_class(inchem_main_class,
             initial_conditions_gas='initial_concentrations.txt', seconds_to_integrate=180)
-        output_concentrations, _ = run_main_class(inchem_main_class, 
+        output_concentrations, _ = run_main_class(inchem_main_class,
             initials_from_run= True, initial_dataframe=interim_concentrations, t0=180, seconds_to_integrate=180)
 
         with open('multiroom_model_tests/run_0_to_180.pickle', 'rb') as file:

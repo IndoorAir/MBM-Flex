@@ -1,4 +1,22 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 import unittest
+
 from multiroom_model.time_dep_value import TimeDependentValue
 
 
@@ -51,6 +69,7 @@ class TestTimeDependentValueLinearInterpolation(unittest.TestCase):
         with self.assertRaises(Exception):
             tdv_single.value_at_time(2.1)
 
+
 class TestTimeDependentDiscontinuous(unittest.TestCase):
     def setUp(self):
         self.data = [
@@ -91,6 +110,7 @@ class TestTimeDependentDiscontinuous(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             TimeDependentValue([(1.0, 10.0), (0.5, 20.0)], continuous=True)
         self.assertIn("times were not in order", str(context.exception).lower())
+
 
 if __name__ == '__main__':
     unittest.main()
