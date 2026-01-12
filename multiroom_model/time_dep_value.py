@@ -1,3 +1,20 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 from typing import List, Tuple
 
 
@@ -5,7 +22,7 @@ class TimeDependentValue:
     """
         @brief A class recording a variable which varies in time
         Stored in the form of a list of tuples,
-        each  tuple has a time and a value 
+        each  tuple has a time and a value
         it can be continuous which means that linear interpolation will be performed between defined times
 
     """

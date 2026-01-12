@@ -1,3 +1,20 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 from typing import Any, Dict, List, Tuple, Optional
 import pyjson5
 
@@ -159,11 +176,11 @@ class RoomChemistryJSONBuilder:
         n = len(tv_pairs)
 
         if n == 2:
-            # generate 4 uniformly 
+            # generate 4 uniformly
             (t0, v0), (t1, v1) = tv_pairs
             ts = [t0 + (t1 - t0) * i / 3 for i in range(4)]
             vs = [v0 + (v1 - v0) * i / 3 for i in range(4)]
-            
+
             return list(zip(ts, vs))
 
         elif n == 3:
@@ -185,7 +202,7 @@ class RoomChemistryJSONBuilder:
 
             # insert midpoint
             return tv_pairs[:idx+1] + [midpoint] + tv_pairs[idx+1:]
-        
+
         else:
             return tv_pairs
 
@@ -307,7 +324,7 @@ class WindJsonBuilder:
             except Exception as e:
                 raise ValueError(f"Invalid numeric start/end/value at index {i}: {e}")
         return TimeDependentValue(out[0], True), TimeDependentValue(out[1], True)
-    
+
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> WindDefinition:
         try:

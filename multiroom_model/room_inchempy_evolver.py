@@ -1,3 +1,20 @@
+# ############################################################################ #
+#
+# Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
+# James Levine, Christian Pfrang.
+#
+# This file is part of MBM-Flex.
+#
+# MBM-Flex is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (https://www.gnu.org/licenses) as
+# published by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
+# the MBM-Flex project.
+#
+# ############################################################################ #
+
 from typing import List, Tuple
 from .global_settings import GlobalSettings
 from .room_chemistry import RoomChemistry
@@ -44,7 +61,7 @@ class RoomInchemPyEvolver:
             'saero': 1.3e-2  # aerosol surface area concentration
         }
 
-        # Change the rooms emisions into the format of dictionary which inchempy understands 
+        # Change the rooms emisions into the format of dictionary which inchempy understands
         timed_emissions = hasattr(room, "emissions")
         if timed_emissions:
             timed_inputs = {k: v.values() for k, v in room.emissions.items()}
@@ -106,12 +123,12 @@ class RoomInchemPyEvolver:
         }
 
 
-        # Change the rooms time dependent properties to lists and dictionaries which inchempy understands 
+        # Change the rooms time dependent properties to lists and dictionaries which inchempy understands
         light_on_times = interpret_light_on_times(self.room.light_switch, t0+seconds_to_integrate)
         temperatures = list(zip(self.room.temp_in_kelvin.times(), self.room.temp_in_kelvin.values()))
         ACRate_dict = dict(zip(self.room.airchange_in_per_second.times(), self.room.airchange_in_per_second.values()))
 
-        # Change the rooms emisions into the format of dictionary which inchempy understands 
+        # Change the rooms emisions into the format of dictionary which inchempy understands
         timed_emissions = hasattr(self.room, "emissions")
         if timed_emissions:
             timed_inputs = {k: v.values() for k, v in self.room.emissions.items()}
