@@ -10,7 +10,7 @@
 # published by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# A copy of the GPLv3 license can be found in the file LICENSE at the root of
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
 # the MBM-Flex project.
 #
 # ############################################################################ #

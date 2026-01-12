@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ############################################################################ #
 #
 # Copyright (c) 2025 Roberto Sommariva, Neil Butcher, Adrian Garcia,
@@ -11,7 +10,7 @@
 # published by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# A copy of the GPLv3 license can be found in the file LICENSE at the root of
+# A copy of the GPLv3 license can be found in the file `LICENSE` at the root of
 # the MBM-Flex project.
 #
 # ############################################################################ #
@@ -22,7 +21,6 @@
 # All csv files are stored in the extracted_outputs folder, inside the main output directory.
 # An excel filename can optionally be provided, in which case the data will also be output to an excel file
 
-# Import modules
 import os
 import pickle
 import pandas as pd
