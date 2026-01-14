@@ -15,25 +15,43 @@
 #
 # ############################################################################ #
 
+# ############################################################################ #
+#                            MBM-Flex main script
+#
+# Define the global settings of the simulation and of the whole building, the
+# time control of the simulation, and the name of the output directory.
+#
+# The characteristics of the building and of each individual room are set in the
+# 'config_rooms/' directory. The initial conditions in each individual room are
+# set in the 'config_chem/' directory.
+# ############################################################################ #
+
 import math
 import pickle
+
 from typing import Dict, List
 from multiroom_model.global_settings import GlobalSettings
 from multiroom_model.simulation import Simulation, RoomChemistry, Aperture, WindDefinition
 from multiroom_model.json_parser import BuildingJSONParser
 
-# Define some global settings which are true for the whole building
+# ############################################################################ #
+
 if __name__ == '__main__':
 
-    ambient_press = 1013.0   # ambient pressure (mbar) is assumed to be constant, and is the same in all rooms
-    ambient_temp = 293.0     # ambient temperature (K) is assumed to be constant
+    # ambient pressure (mbar) is assumed to be constant, and is the same in all rooms
+    ambient_press = 1013.0
+
+    # ambient temperature (K) is assumed to be constant
+    ambient_temp = 293.0
+
     # ambient air density (assuming dry air), in kg/m3
     rho = (100*ambient_press) / (287.050 * ambient_temp)
 
+    # Simulation settings
     global_settings = GlobalSettings(
-        filename='chem_mech/mcm_subset.fac',
+        filename='chem_mech/rcs_2023.fac',
         INCHEM_additional=False,
-        particles=True,
+        particles=False,
         constrained_file=None,
         output_folder=None,
         dt=1,
@@ -53,16 +71,28 @@ if __name__ == '__main__':
         downwind_pressure_coefficient=-0.2
     )
 
-    # Read the json file for the room and extract all the data we need from it
+    # Simulation time control (in seconds)
+    # - start_time: starting time of the simulation (0 is midnight)
+    # - total_time: total duration of the simulation
+    # - transport_interval: how often inter-room transport is applied
+    start_time=0,
+    total_time=20,
+    transport_interval=6,
+
+    # ############################################################################ #
+    # DO NOT CHANGE THE CODE BELOW                                                 #
+    # ############################################################################ #
+
+    # Read the json file for each room and extract all the data we need from it
     input_data = BuildingJSONParser.from_json_file("config_rooms/building.json")
 
-    # the rooms
+    # Definition of the rooms
     rooms_dictionary: Dict[str,RoomChemistry] = input_data["rooms"]
 
-    # the apertures
+    # Definition of the apertures
     apertures: List[Aperture] = input_data['apertures']
 
-    # the definition of the wind
+    # Definition of the wind
     wind_definition: WindDefinition = input_data['wind']
 
     # We dont need the keys of the rooms anymore now we have populated them
@@ -76,30 +106,18 @@ if __name__ == '__main__':
         apertures=apertures,
         wind_definition=wind_definition)
 
-    # an initial conditions text file for each room
+    # An initial conditions text file for each room
     initial_conditions = input_data['initial_conditions']
 
-    # Run the simulation starting at time t0
-    # Run for a duration of t_total seconds
-    # interrupt the inchempy solver to apply the effects of windows every t_interval seconds
+    # Run the simulation starting at time t0 for a duration of t_total seconds
+    # Interrupt the inchempy solver to apply transport every t_interval seconds
     result = simulation.run(
-        t0=0,
-        t_total=20,
-        t_interval=6,
+        t0=start_time,
+        t_total=total_time,
+        t_interval=transport_interval,
         init_conditions=initial_conditions
     )
 
     # Save to pickle file
-
     results_dictionary = dict((key, result[r]) for key, r in rooms_dictionary.items())
-
     pickle.dump(results_dictionary, open("./results.pkl", "wb"))
-
-    # Make use of results here eg
-    # plot tool
-
-    # Demo: Print one of the many results to the output
-    species_of_interest = "CO"
-    time_of_interest = 9
-
-    print(f"\n\nCO concentration in room 1 after 9 seconds = {results_dictionary['room 1'][species_of_interest][time_of_interest]}")
