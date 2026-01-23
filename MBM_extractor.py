@@ -28,6 +28,7 @@ import pandas as pd
 # =============================================================================================== #
 # User-specified model variables to extract
 
+mbm_output_dir ='output'
 pickle_file = 'results.pkl'
 extracted_outputs_folder = 'extracted_outputs'
 extracted_excel_filename = None
@@ -42,8 +43,7 @@ vars_to_extract = [
                     ]
 
 # Load the datafile
-
-with open(pickle_file, 'rb') as handle:
+with open('%s/%s' % (mbm_output_dir,pickle_file), 'rb') as handle:
     data = pickle.load(handle)
 
 # =============================================================================================== #
@@ -54,17 +54,17 @@ for room_name, room_pd in data.items():
 
     # create the extracted_outputs folder if it doesn't exist
     path = os.getcwd()
-    if not os.path.exists(f'{path}/{extracted_outputs_folder}'):
-        os.mkdir(f'{path}/{extracted_outputs_folder}')
+    if not os.path.exists(f'{path}/{mbm_output_dir}/{extracted_outputs_folder}'):
+        os.mkdir(f'{path}/{mbm_output_dir}/{extracted_outputs_folder}')
 
     # extract those variables listed in vars_to_extract that exist in the data
     existing_vars_to_extract = (v for v in vars_to_extract if v in room_pd.columns)
-    room_pd.to_csv(f'{path}/{extracted_outputs_folder}/{room_name}.csv',
+    room_pd.to_csv(f'{path}/{mbm_output_dir}/{extracted_outputs_folder}/{room_name}.csv',
                    columns=existing_vars_to_extract, index_label='Time')
 
     # extract those variables listed in vars_to_extract that exist in the outdoor data
     outvars_to_extract = (v+'OUT' for v in vars_to_extract if v+'OUT' in room_pd.columns)
-    room_pd.to_csv(f'{path}/{extracted_outputs_folder}/{room_name}_outdoor.csv',
+    room_pd.to_csv(f'{path}/{mbm_output_dir}/{extracted_outputs_folder}/{room_name}_outdoor.csv',
                    columns=outvars_to_extract, index_label='Time')
 
 
@@ -72,7 +72,7 @@ for room_name, room_pd in data.items():
 # Optional: Extract the selected variables and save them to one excel file with one sheet per room
 
 if extracted_excel_filename:
-    with pd.ExcelWriter(f'{path}/{extracted_outputs_folder}/{extracted_excel_filename}.xlsx') as writer:
+    with pd.ExcelWriter(f'{path}/{mbm_output_dir}/{extracted_outputs_folder}/{extracted_excel_filename}.xlsx') as writer:
         for room_name, room_pd in data.items():
             existing_vars_to_extract = list(v for v in vars_to_extract if v in room_pd.columns)
             room_pd.to_excel(writer, columns=existing_vars_to_extract, index_label='Time', sheet_name=room_name)

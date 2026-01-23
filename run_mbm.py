@@ -26,6 +26,7 @@
 # set in the 'config_chem/' directory.
 # ############################################################################ #
 
+import os
 import math
 import pickle
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
         INCHEM_additional=False,
         particles=False,
         constrained_file=None,
-        output_folder=None,
+        #output_folder=None,
         dt=1,
         H2O2_dep=False,
         O3_dep=False,
@@ -78,6 +79,10 @@ if __name__ == '__main__':
     start_time=0,
     total_time=20,
     transport_interval=6,
+
+    # Name of the folder where the model results will be saved. The folder name
+    # will be automatically prefixed with the date and time of the simulation.
+    mbm_output='output'
 
     # ############################################################################ #
     # DO NOT CHANGE THE CODE BELOW                                                 #
@@ -118,6 +123,9 @@ if __name__ == '__main__':
         init_conditions=initial_conditions
     )
 
-    # Save to pickle file
     results_dictionary = dict((key, result[r]) for key, r in rooms_dictionary.items())
-    pickle.dump(results_dictionary, open("./results.pkl", "wb"))
+
+    # Save results to pickle file
+    mbm_output_dir = ('%s_%s' % (now.strftime('%y%m%d_%H%M%S'), mbm_output))
+    os.mkdir('%s/%s' % (os.getcwd(), mbm_output_dir))
+    pickle.dump(results_dictionary, open('%s/results.pkl' % mbm_output_dir), "wb"))
