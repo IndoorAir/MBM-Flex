@@ -1,5 +1,7 @@
 __pycache__/
 
-# an appropriate version of INCHEM-Py needs to be copied to the inchempy/ directory before use;
-# this needs to be done manually as we don't want to use a submodule
+# the model output directory names have the format: 'ymd_HMS_<folder name>'
+[0-9]*
+
+# a working version of INCHEM-Py needs to be copied into the 'inchempy/' directory
 inchempy/

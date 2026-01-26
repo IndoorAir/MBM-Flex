@@ -29,7 +29,7 @@
 import os
 import math
 import pickle
-
+from datetime import datetime
 from typing import Dict, List
 from multiroom_model.global_settings import GlobalSettings
 from multiroom_model.simulation import Simulation, RoomChemistry, Aperture, WindDefinition
@@ -54,7 +54,6 @@ if __name__ == '__main__':
         INCHEM_additional=False,
         particles=False,
         constrained_file=None,
-        #output_folder=None,
         dt=1,
         H2O2_dep=False,
         O3_dep=False,
@@ -76,9 +75,9 @@ if __name__ == '__main__':
     # - start_time: starting time of the simulation (0 is midnight)
     # - total_time: total duration of the simulation
     # - transport_interval: how often inter-room transport is applied
-    start_time=0,
-    total_time=20,
-    transport_interval=6,
+    start_time=0
+    total_time=20
+    transport_interval=6
 
     # Name of the folder where the model results will be saved. The folder name
     # will be automatically prefixed with the date and time of the simulation.
@@ -126,6 +125,6 @@ if __name__ == '__main__':
     results_dictionary = dict((key, result[r]) for key, r in rooms_dictionary.items())
 
     # Save results to pickle file
-    mbm_output_dir = ('%s_%s' % (now.strftime('%y%m%d_%H%M%S'), mbm_output))
+    mbm_output_dir = ('%s_%s' % (datetime.now().strftime('%y%m%d_%H%M%S'), mbm_output))
     os.mkdir('%s/%s' % (os.getcwd(), mbm_output_dir))
-    pickle.dump(results_dictionary, open('%s/results.pkl' % mbm_output_dir), "wb"))
+    pickle.dump(results_dictionary, open('%s/mbm_results.pkl' % mbm_output_dir, "wb"))

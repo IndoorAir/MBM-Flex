@@ -16,7 +16,7 @@
 # ############################################################################ #
 
 from typing import Any, Dict, List, Tuple, Optional
-import pyjson5
+import json5
 
 from .room_chemistry import RoomChemistry
 from .surface_composition import SurfaceComposition
@@ -46,7 +46,7 @@ class RoomChemistryJSONBuilder:
     @staticmethod
     def from_json_file(json_file: str) -> RoomChemistry:
         with open(json_file, 'r') as file:
-            data = pyjson5.loads(file.read())
+            data = json5.loads(file.read())
         return RoomChemistryJSONBuilder.from_dict(data)
 
     @staticmethod
@@ -508,11 +508,11 @@ class BuildingJSONParser:
     @staticmethod
     def from_json_file(filename: str):
         with open(filename, "r") as f:
-            data = pyjson5.load(f)
+            data = json5.load(f)
         return BuildingJSONParser.from_dict(data)
 
     @staticmethod
     def from_json_files(building_filename: str, rooms_files: Dict[str, Any]):
         with open(building_filename, "r") as f:
-            data = pyjson5.load(f)
+            data = json5.load(f)
         return BuildingJSONParser.from_dicts(data, rooms_files)

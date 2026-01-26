@@ -14,7 +14,7 @@ MBM-Flex is a Python-based multi-room box-model for indoor air chemistry and tra
 
 ## Model description
 
-MBM-Flex is built upon the [INCHEM-Py](https://github.com/DrDaveShaw/INCHEM-Py/) indoor chemical box-model. INCHEM-Py is designed to simulate air quality inside a single room, while MBM-Flex is designed to simulate air quality inside a number of interconnected rooms or an entire building. 
+MBM-Flex is built upon the [INCHEM-Py](https://github.com/DrDaveShaw/INCHEM-Py/) indoor chemical box-model. INCHEM-Py is designed to simulate air quality inside a single room, while MBM-Flex is designed to simulate air quality inside a number of interconnected rooms or an entire building.
 
 To do so, MBM-Flex runs separate instances of INCHEM-Py for each per-room chemistry in piecewise time intervals. Between intervals it both adjusts the properties of a room which would otherwise be fixed; and interconnects the instances with an implementation of inter-room transport.
 
@@ -31,7 +31,7 @@ To do so, MBM-Flex runs separate instances of INCHEM-Py for each per-room chemis
 + threadpoolctl
 + matplotlib
 + multiprocess
-+ pyjson5
++ json5
 
 **Acquire inchempy**
 
@@ -48,7 +48,7 @@ You can download this precise version [here](https://github.com/DrDaveShaw/INCHE
 python run_mbm.py
 ```
 This will run the example simulation defined in the `config_rooms/` folder.
-It produces a pkl binary file with the results contained and dataframes for the different rooms. 
+It produces a pkl binary file with the results contained and dataframes for the different rooms.
 
 **Extract results / post-process:**
 
@@ -84,8 +84,8 @@ This suite runs many unit tests of the chemistry and could take many minutes.
 ## Configuring the simulation
 
 All settings are defined or referenced in `run_mbm.py`.
-You can edit this file to change global settings. 
-You can select a different building configuration by changing the line 
+You can edit this file to change global settings.
+You can select a different building configuration by changing the line
 `input_data = BuildingJSONParser.from_json_file("config_rooms/building.json")`
 .
 
@@ -123,7 +123,7 @@ For a description of any of the parameters local to a single room see the [INCHE
 
 **Chemical Mechanism `fac` files**
 
-Chemical mechanism files (FAC format) live in `chem_mech/`; one is selected in the global settings of `run_mbm.py`. 
+Chemical mechanism files (FAC format) live in `chem_mech/`; one is selected in the global settings of `run_mbm.py`.
 Example files:
 
 - [chem_mech/mcm_v331.fac](chem_mech/mcm_v331.fac)
@@ -143,7 +143,7 @@ When you first open the editor, you'll see a blank canvas on the left and a tool
 
 To add a new room to your layout, click the "Add Room" button in the toolbar. A new room will appear on the canvas with a default name like "Room 1". You can drag the room anywhere on the canvas to position it, and resize it by dragging the corner. Double clicking on the name allows the name to be changed
 
-Each room has editable properties displayed in the JSON editor panel on the right side of the screen. Click on a room to select it and see its JSON data. You can modify the room's properties directly in the JSON editor, such as changing its name or adding custom properties. 
+Each room has editable properties displayed in the JSON editor panel on the right side of the screen. Click on a room to select it and see its JSON data. You can modify the room's properties directly in the JSON editor, such as changing its name or adding custom properties.
 
 #### Creating Apertures
 

@@ -20,7 +20,6 @@
 # If the variable exist outdoors, it is saved in a separate csv file.
 # All csv files are stored in the extracted_outputs folder, inside the main output directory.
 # An excel filename can optionally be provided, in which case the data will also be output to an excel file
-
 import os
 import pickle
 import pandas as pd
@@ -28,8 +27,8 @@ import pandas as pd
 # =============================================================================================== #
 # User-specified model variables to extract
 
-mbm_output_dir ='output'
-pickle_file = 'results.pkl'
+mbm_output_dir ='260123_160450_output'
+pickle_file = 'mbm_results.pkl'
 extracted_outputs_folder = 'extracted_outputs'
 extracted_excel_filename = None
 
