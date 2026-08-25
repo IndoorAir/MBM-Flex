@@ -26,9 +26,10 @@
 # set in the 'config_chem/' directory.
 # ############################################################################ #
 
-import os
+import os, shutil
 import math
 import pickle
+from shutil import copyfile
 from datetime import datetime
 from typing import Dict, List
 from multiroom_model.global_settings import GlobalSettings
@@ -128,3 +129,5 @@ if __name__ == '__main__':
     mbm_output_dir = ('%s_%s' % (datetime.now().strftime('%y%m%d_%H%M%S'), mbm_output))
     os.mkdir('%s/%s' % (os.getcwd(), mbm_output_dir))
     pickle.dump(results_dictionary, open('%s/mbm_results.pkl' % mbm_output_dir, "wb"))
+    # Save the global settings script for reference
+    shutil.copy('run_mbm.py', mbm_output_dir)

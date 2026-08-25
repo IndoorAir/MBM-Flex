@@ -297,6 +297,10 @@ class Simulation:
         # Calculate the flux relating to this aperture
         flux = aperture_calculator.trans_matrix_contributions(wind_speed, wind_direction)
 
+        # print debugging flows info
+        #if(origin_index==0 and destination_index==1):
+        print('FLOW:', origin_index+1, '-->', (destination_index+1 if destination_index is not None else "Outdoor"), '=', flux)
+
         # build a flow calculator
         calculator = ApertureFlowCalculator(room_results[origin_index].columns)
 

@@ -27,7 +27,7 @@ import pandas as pd
 # =============================================================================================== #
 # User-specified model variables to extract
 
-mbm_output_dir ='260123_160450_output'
+mbm_output_dir ='260723_192331_output'
 pickle_file = 'mbm_results.pkl'
 extracted_outputs_folder = 'extracted_outputs'
 extracted_excel_filename = None
@@ -35,10 +35,7 @@ extracted_excel_filename = None
 # Model variables to extract - Note that there is no need to include outdoors variables:
 # if the variable exist outdoors it will be extracted automatically
 vars_to_extract = [
-    'O3','NO','NO2','HONO','HNO3','CO','APINENE','BPINENE','LIMONENE',
-    'BENZENE','TOLUENE','TCE','OH','HO2','CH3O2','RO2','H2O','M',
-    'H2O2','adults','children',
-    'OH_reactivity','OH_production','J4','temp','ACRate','tsp','tspx',
+    'NO','NO2','O3','CO','TSP','TSPx','ACRate'
                     ]
 
 # Load the datafile

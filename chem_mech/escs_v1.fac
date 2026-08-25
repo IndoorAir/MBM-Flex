@@ -12,8 +12,9 @@
 *;
 * Variable definitions.  All species are listed here.;
 *;
+* N.B.: `TRACX` is a passive tracer
 VARIABLE
- O3 NO NO2 OH HO2 CO VOC RRO2 RRNO3 RRCHO ;
+ O3 NO NO2 OH HO2 CO VOC RRO2 RRNO3 RRCHO TRACX ;
 ****************************************************** ;
 *;
 * Generic Rate Coefficients ;
