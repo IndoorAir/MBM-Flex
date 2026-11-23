@@ -23,9 +23,9 @@ import pandas as pd
 
 class ApertureFlowCalculator:
     """
-        @brief A class used to deduce absolute changes to concentrations, caused by a flux through an aperture
+        @brief A class used to calculate absolute changes to concentrations, caused by a flux through an aperture
         It knows which species to transport, either between rooms or to the outside
-        It uses the rooms volumes and current concentrations to deduce the absolute concentration changes
+        It uses the rooms volumes and current concentrations to calculate the absolute concentration changes
 
     """
     indoor_var_list: List[str]
@@ -41,7 +41,7 @@ class ApertureFlowCalculator:
                               room_1_volume: float,
                               room_2_volume: float) -> Tuple[pd.Series, pd.Series]:
         '''
-        Deduce the absolute changes in concentrations, caused by the flux arising from an aperture between 2 rooms
+        Calculate the absolute changes in concentrations, caused by the flux arising from an aperture between 2 rooms
 
         inputs:
             flux = The flux through the aperture, calculated in aperture_calculations
@@ -54,7 +54,7 @@ class ApertureFlowCalculator:
         returns:
             results = concentration_change_in_room_1, concentration_change_in_room_2
         '''
-        # deduce the absolute airflow over the time interval
+        # calculate the absolute airflow over the time interval
         flow_from_1_to_2 = flux.from_1_to_2*delta_time
         flow_from_2_to_1 = flux.from_2_to_1*delta_time
 
@@ -73,7 +73,7 @@ class ApertureFlowCalculator:
                                       room_1_concentrations: pd.Series,
                                       room_1_volume: float) -> pd.Series:
         '''
-        Deduce the absolute changes in concentrations,
+        Calculate the absolute changes in concentrations,
         caused by the flux arising from an aperture from a room to its outside
 
         inputs:
@@ -86,7 +86,7 @@ class ApertureFlowCalculator:
             results = concentration_change_in_room_1
         '''
 
-        # deduce the absolute airflow over the time interval
+        # calculate the absolute airflow over the time interval
         flow_from_1_to_2 = flux.from_1_to_2*delta_time
         flow_from_2_to_1 = flux.from_2_to_1*delta_time
 
@@ -129,20 +129,21 @@ class ApertureFlowCalculator:
 
         # indoor variables that cannot be transported
         in_patterns = [
-            re.compile(r'.+SURF$'),  # concentrations on surfaces
-            re.compile(r'^J\d+'),    # photolysis rates
-            re.compile(r'^YIELD.+'),  # yields from materials
-            re.compile(r'^AV.+'),    # surface/volume ratios
-            re.compile(r'^vd.+'),    # deposition velocities
-            re.compile(r'^r\d+')     # reaction rates
+            re.compile(r'.+SURF$'),     # concentrations on surfaces
+            re.compile(r'^J\d+'),       # photolysis rates
+            re.compile(r'^YIELD.+'),    # yields from materials
+            re.compile(r'^AV.+'),       # surface/volume ratios
+            re.compile(r'^vd.+'),       # deposition velocities
+            re.compile(r'^r\d+'),       # reaction rates
+            re.compile(r'^EMISSION.+')  # emission rates
         ]
 
         # outdoor variables
         out_pattern = re.compile(r'.*OUT$')
 
         # constants, rate coefficients, and other variables
-        reserved_list = ['ACRate', 'cosx', 'secx', 'M', 'temp', 'H2O', 'PI', 'AV', 'adults', 'children', 'O2', 'N2', 'H2', 'saero',
-                         'OH_reactivity', 'OH_production', 'KDI', 'K8I', 'FC9', 'NC13', 'NCD', 'FC12', 'KMT14', 'CNO3', 'KMT05',
+        reserved_list = ['ACRate', 'cosx', 'secx', 'M', 'temp', 'H2O', 'PI', 'AV', 'adults', 'children', 'O2', 'N2', 'H2', 'volume',
+                         'saero', 'OH_reactivity', 'OH_production', 'KDI', 'K8I', 'FC9', 'NC13', 'NCD', 'FC12', 'KMT14', 'CNO3', 'KMT05',
                          'F17', 'K140', 'KFPAN', 'KPPNI', 'K20', 'KMT06', 'KCH3O2', 'K7I', 'NC14', 'NCPPN', 'F3', 'K10I', 'KRD',
                          'KR10', 'NC1', 'K3I', 'NC17', 'K12I', 'NC4', 'K14I', 'K150', 'K200', 'F20', 'KMT16', 'K160', 'F19', 'KR7',
                          'FC2', 'F16', 'N19', 'KR3', 'KMT20', 'KHOCL', 'F13', 'KC0', 'KMT04', 'KRPPN', 'F9', 'K130', 'KMT10', 'KR19',

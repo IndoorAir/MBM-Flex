@@ -41,6 +41,7 @@ class Simulation:
 
     """
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def __init__(self,
                  global_settings: GlobalSettings,
                  rooms: List[RoomChemistry],
@@ -77,6 +78,7 @@ class Simulation:
             self._aperture_calculators: List[ApertureCalculation] = pool.starmap(
                 self.build_aperture_calculator_starmap, args)
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def run(self, init_conditions: dict, t0: float, t_total: float, t_interval: float):
         """
         @brief run the simulation over a time interval.
@@ -129,6 +131,7 @@ class Simulation:
 
         return cumulative_room_results
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def wind_state(self, time):
         """
         Determine the wind speed and direction (in radians)
@@ -142,6 +145,7 @@ class Simulation:
                 wind_direction)
             return wind_speed, wind_direction_in_radians
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def _apply_wind(self, pool, time, t_interval, room_results):
         """
         Applies the effect of the wind, to alter the state of the rooms
@@ -151,13 +155,44 @@ class Simulation:
         """
         # Determine the properties of the wind at this time
         wind_speed, wind_direction_in_radians = self.wind_state(time)
-        # For each aperture  calculate a aperture result  (performed in parallel)
-        args = [(w, wind_speed, wind_direction_in_radians, t_interval, room_results, time)
+        # Through-flow of each room, calculated once and used by the exchange flow of the apertures
+        room_throughflows = self._room_throughflows(wind_speed, wind_direction_in_radians)
+        # For each aperture  calculate a aperture result (performed in parallel)
+        args = [(w, wind_speed, wind_direction_in_radians, t_interval, room_results, time, room_throughflows)
                 for w in self._aperture_calculators]
         aperture_results = pool.starmap(self.run_aperture_calculation_starmap, args)
         # Use the aperture results to adjust the room results into the input for the next iteration
         return self.apply_aperture_results(room_results, aperture_results, time)
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def _room_throughflows(self, wind_speed, wind_direction_in_radians):
+        """
+        Through-flow (m3/s) of each room caused by the advection flow of its apertures.
+        It is half the sum of the absolute advection flows of the room's apertures:
+        each unit of air enters through one aperture and leaves through another.
+        """
+        through = [0.0] * len(self._rooms)
+        for aperture_calculator, origin_index, destination_index, _, _ in self._aperture_calculators:
+            q = 0.5 * abs(aperture_calculator.advection_flow_rate(wind_speed, wind_direction_in_radians))
+            through[origin_index] += q
+            if destination_index is not None:
+                through[destination_index] += q
+        return through
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
+    @staticmethod
+    def _adjacent_throughflow(room_throughflows, origin_index, destination_index):
+        """
+        The through-flow driving the exchange flow of an aperture is the larger of the
+        through-flows of its rooms (a room with no advection flow has zero through-flow)
+        """
+        if room_throughflows is None:
+            return 0.0
+        if destination_index is None:
+            return room_throughflows[origin_index]
+        return max(room_throughflows[origin_index], room_throughflows[destination_index])
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def _evolve_rooms(self, pool, t0, t_interval, initial_condition, txt_file=False):
         """
         Evolves each of the rooms independently for one interval of time
@@ -179,6 +214,7 @@ class Simulation:
         # This results in a new time which we have solved to
         return room_results, t0+t_interval
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     def trans_matrix(self, time: float):
         """
         @brief calculate the whole trans matrix at a given time.
@@ -192,18 +228,23 @@ class Simulation:
         # Make a result numpy matrix
         result = np.zeros((size, size))
 
+        # Through-flow of each room, used by the exchange flow of the apertures
+        room_throughflows = self._room_throughflows(wind_speed, wind_direction_in_radians)
+
         # For each aperture calculate the flux and add it to the resultant matrix
         for c in self._aperture_calculators:
             aperture_calculator, origin_index, destination_index, _, _ = c
             is_outdoor_aperture = destination_index is None
             i = origin_index+1
             j = 0 if is_outdoor_aperture else destination_index+1
-            f = aperture_calculator.trans_matrix_contributions(wind_speed, wind_direction_in_radians)
+            adjacent = self._adjacent_throughflow(room_throughflows, origin_index, destination_index)
+            f = aperture_calculator.trans_matrix_contributions(wind_speed, wind_direction_in_radians, adjacent)
             result[i, j] += f.from_1_to_2
             result[j, i] += f.from_2_to_1
 
         return result
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     @staticmethod
     def apply_aperture_results(room_results, aperture_results, solved_time):
         """
@@ -241,6 +282,7 @@ class Simulation:
         # return the augmented results
         return result
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     @staticmethod
     def build_room_evolver_starmap(room, global_settings):
         """
@@ -248,6 +290,7 @@ class Simulation:
         """
         return RoomInchemPyEvolver(room, global_settings)
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     @staticmethod
     def run_room_evolver_starmap(evolver, t0, t_interval, initial_condition, txt_file):
         """
@@ -260,6 +303,7 @@ class Simulation:
             df, _ = evolver.run(t0=t0, seconds_to_integrate=t_interval, initial_dataframe=initial_condition)
         return df
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     @staticmethod
     def build_aperture_calculator_starmap(aperture, transport_paths, apertures, rooms, global_settings):
         """
@@ -278,12 +322,14 @@ class Simulation:
                                           global_settings.downwind_pressure_coefficient))
         return calculator, origin_index, destination_index, origin_volume, destination_volume
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++
     @staticmethod
     def run_aperture_calculation_starmap(aperture_calculator_data,
                                          wind_speed, wind_direction,
                                          delta_time,
                                          room_results,
-                                         solved_time):
+                                         solved_time,
+                                         room_throughflows):
         """
         Use the aperture calculation to:
         - calculate a flux based on the current wind
@@ -295,7 +341,8 @@ class Simulation:
         aperture_calculator, origin_index, destination_index, origin_volume, destination_volume = aperture_calculator_data
 
         # Calculate the flux relating to this aperture
-        flux = aperture_calculator.trans_matrix_contributions(wind_speed, wind_direction)
+        adjacent = Simulation._adjacent_throughflow(room_throughflows, origin_index, destination_index)
+        flux = aperture_calculator.trans_matrix_contributions(wind_speed, wind_direction, adjacent)
 
         # build a flow calculator
         calculator = ApertureFlowCalculator(room_results[origin_index].columns)

@@ -225,8 +225,9 @@ def generate_main_class(
     custom: bool = default_settings.custom,
     timed_emissions: bool = default_settings.timed_emissions,
     timed_inputs: Dict[str, List[List[Union[int, float]]]] = default_settings.timed_inputs,
-    custom_filename: str = default_settings.custom_filename
-
+    custom_filename: str = default_settings.custom_filename,
+    adults: int = default_settings.adults,
+    children: int = default_settings.children
 ) -> InChemPyMainClass:
     """
         @brief Generates anInChemPyMainClass with the default settings as defined by the InChemPyInstance
@@ -234,7 +235,7 @@ def generate_main_class(
     """
     return InChemPyMainClass(filename, INCHEM_additional, particles, constrained_file, output_folder, dt,
                              volume, surface_area, const_dict, H2O2_dep, O3_dep,
-                             custom, timed_emissions, timed_inputs, custom_filename)
+                             custom, timed_emissions, timed_inputs, custom_filename, adults, children)
 
 
 @staticmethod

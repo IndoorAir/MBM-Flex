@@ -16,7 +16,7 @@
 # ############################################################################ #
 
 import unittest
-import pyjson5
+import json5
 
 from multiroom_model.surface_composition import SurfaceComposition
 from multiroom_model.room_chemistry import RoomChemistry
@@ -145,7 +145,7 @@ EXPLICIT_JSON = r'''
 
 class TestRoomChemistryFromJson(unittest.TestCase):
     def setUp(self):
-        self.room = RoomChemistryJSONBuilder.from_dict(pyjson5.loads(EXPLICIT_JSON))
+        self.room = RoomChemistryJSONBuilder.from_dict(json5.loads(EXPLICIT_JSON))
 
     def test_basic_fields(self):
         self.assertAlmostEqual(self.room.volume_in_m3, 10.0)
