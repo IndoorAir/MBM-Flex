@@ -42,10 +42,10 @@ from multiroom_model.json_parser import BuildingJSONParser
 if __name__ == '__main__':
 
     # ambient pressure (mbar) is assumed to be constant, and is the same in all rooms
-    ambient_press = 1004.12
+    ambient_press = 1004.71
 
     # ambient temperature (K) is assumed to be constant
-    ambient_temp = 278.25
+    ambient_temp = 278.06
 
     # ambient air density (assuming dry air), in kg/m3
     rho = (100*ambient_press) / (287.050 * ambient_temp)
@@ -62,15 +62,15 @@ if __name__ == '__main__':
         custom=False,
         custom_filename=None,
         diurnal=True,
-        city='London_urban',
+        city='London_suburban',
         date='01-01-2026',
         lat=45.4,
         path=None,
         reactions_output=False,
         building_direction_in_radians=math.radians(180),
         air_density=rho,
-        upwind_pressure_coefficient=0.3,
-        downwind_pressure_coefficient=-0.2
+        upwind_pressure_coefficient=1,
+        downwind_pressure_coefficient=-1
     )
 
     # Simulation time control (in seconds)

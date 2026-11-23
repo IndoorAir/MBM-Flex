@@ -1,56 +1,78 @@
 {
-      "volume_in_m3": 37.5,
-      "surf_area_in_m2": 81,
-      "light_type": "LED",
-      "glass_type": "no_sunlight",
-      "composition": {
-        "soft": 10,
-        "paint": 30,
+    "volume_in_m3": 13.125,
+    "surf_area_in_m2": 35.5,
+    "light_type": "LED",
+    "glass_type": "low_emissivity",
+    "composition": {
+        "soft": 1,
+        "paint": 55,
         "wood": 20,
-        "metal": 0,
-        "concrete": 20,
-        "paper": 20,
-        "lino": 0,
-        "plastic": 0,
+        "metal": 3,
+        "concrete": 5,
+        "paper": 2,
+        "lino": 7,
+        "plastic": 2,
         "human": 0,
-        "glass": 0,
+        "glass": 5,
         "other": 0
-      },
-      "temp_in_kelvin": {
+    },
+    "temp_in_kelvin": {
         "values": [
-          [0,293],
-          [82800, 293]
+            [0, 293.15],
+            [82800, 293.15]
         ]
-      },
-      "rh_in_percent": {
+    },
+    "rh_in_percent": {
         "values": [
-          [0,50],
-          [82800,50]
+            [0, 34.61],
+            [3600, 28.42],
+            [7200, 26.64],
+            [10800, 25.41],
+            [14400, 24.37],
+            [18000, 24.17],
+            [21600, 23.57],
+            [25200, 24.35],
+            [28800, 25.59],
+            [32400, 26.11],
+            [36000, 28.62],
+            [39600, 33.94],
+            [43200, 36.69],
+            [46800, 39.06],
+            [50400, 39.61],
+            [54000, 39.34],
+            [57600, 39.61],
+            [61200, 41.00],
+            [64800, 42.15],
+            [68400, 44.53],
+            [72000, 44.23],
+            [75600, 45.14],
+            [79200, 47.34],
+            [82800, 47.99]
         ]
-      },
-      "airchange_in_per_second": {
+    },
+    "airchange_in_per_second": {
         "values": [
-          [0,0],
-          [82800, 0]
+            [0, 0],
+            [82800, 0]
         ]
-      },
-      "light_switch": {
+    },
+    "light_switch": {
         "values": [
-          [0,1],
-          [82800, 1]
+            [0, 1],
+            [82800, 1]
         ]
-      },
-      "emissions": {},
-      "n_adults": {
+    },
+    "emissions": {},
+    "n_adults": {
         "values": [
-          [0,2],
-          [82800, 2]
+            [0, 2],
+            [82800, 2]
         ]
-      },
-      "n_children": {
+    },
+    "n_children": {
         "values": [
-          [0,1],
-          [82800, 1]
+            [0, 1],
+            [82800, 1]
         ]
-      }
+    }
 }
